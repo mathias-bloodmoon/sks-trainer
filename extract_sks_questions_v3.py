@@ -32,32 +32,57 @@ pattern = re.compile(r"Nummer\s+(\d+):\s*(.*?)\s*(?=Nummer\s+\d+:|$)", re.DOTALL
 def clean_text(text):
     return text.replace("\n", " ").replace("  ", " ").strip()
 
-def extract_question_answer(block_text):
-    """Verbesserte Version: Aufzählungen (1., 2., a), b) etc.) gehören jetzt zur FRAGE"""
-    lines = [l.strip() for l in block_text.strip().split("\n") if l.strip()]
-    if not lines:
-        return None, None
+def extract_question_answer_from_block(block_text, page_num, question_num):
+    """
+    Versucht, bold-Text als Frage zu erkennen.
+    Nutzt PyMuPDF, um die tatsächliche Formatierung zu prüfen.
+    """
+    doc = fitz.open(PDF_PATH)
+    page = doc[page_num]
 
-    question_lines = [lines[0]]
-    answer_lines = []
-    i = 1
+    # Finde den Textblock, der ungefähr zur Frage gehört
+    # (sehr grobe Annäherung – wir suchen nach "Nummer {question_num}:")
+    rects = page.search_for(f"Nummer {question_num}:", quads=True)
+    if not rects:
+        doc.close()
+        return clean_text(block_text), ""  # Fallback
 
-    while i < len(lines):
-        line = lines[i]
-        # Aufzählung → gehört zur Frage (z. B. Multiple-Choice-Optionen oder Beispiele in der Frage)
-        if re.match(r'^\d+\.', line) or re.match(r'^[a-d]\)', line, re.IGNORECASE):
-            question_lines.append(line)
-        # Wenn wir "Antwort", "Lösung", "richtig" etc. sehen → Rest ist Antwort
-        elif any(word in line.lower() for word in ["antwort", "lösung", "richtig", "korrekt", "die richtige"]):
-            answer_lines.append(line)
-            answer_lines.extend(lines[i+1:])
-            break
+    # Nimm den ersten Treffer als Startpunkt
+    start_rect = rects[0].rect
+    # Erweitere den Suchbereich nach unten (typisch 1/2–3/4 Seite)
+    clip_rect = fitz.Rect(start_rect.x0, start_rect.y0, page.rect.width, start_rect.y0 + 600)
+
+    words = page.get_text("words", clip=clip_rect, flags=11)  # flags=11 → mit font info
+
+    question_parts = []
+    answer_parts = []
+    in_question = True  # Start: wir sind in der Frage (bold erwartet)
+
+    for word in words:
+        text, _, _, _, font_flags, font_name = word[4:10]  # flags enthalten bold-Info
+
+        is_bold = bool(font_flags & 1 << 4)  # Bit 4 = bold in PyMuPDF
+
+        # Heuristik: sobald wir non-bold-Text nach bold-Text sehen → Antwort beginnt
+        if in_question and not is_bold and question_parts:
+            in_question = False
+
+        if in_question:
+            question_parts.append(text)
         else:
-            question_lines.append(line)
-        i += 1
+            answer_parts.append(text)
 
-    question = clean_text(" ".join(question_lines))
-    answer = clean_text(" ".join(answer_lines)) if answer_lines else ""
+    doc.close()
+
+    question = clean_text(" ".join(question_parts))
+    answer = clean_text(" ".join(answer_parts))
+
+    # Fallback: wenn Antwort leer → nimm alles nach dem ersten Zeilenumbruch oder "Antwort"
+    if not answer and "\n" in block_text:
+        parts = block_text.split("\n", 1)
+        question = clean_text(parts[0])
+        answer = clean_text(parts[1]) if len(parts) > 1 else ""
+
     return question, answer
 
 def extract_keywords(answer, max_keywords=5):
