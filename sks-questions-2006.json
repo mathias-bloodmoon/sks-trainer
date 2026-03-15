@@ -1724,13 +1724,10 @@
     "category": "Navigation",
     "subcategory": "Welchen",
     "question": "Welchen Abstand muss magnetisierbares Material vom Magnetkompass haben?",
-    "answer": "Mindestens 1 Meter. Stand: 01. Juli 2006 © Wasserstraßen- und Schifffahrtsverwaltung des Bundes Sie sind hier: ELWIS Sportschifffahrt Sportbootführerscheine Fragenkatalog SKS Schifffahrtsrecht Schifffahrtsrecht",
+    "answer": "Mindestens 1 Meter.",
     "keywords": [
-      "schifffahrtsrecht",
-      "mindestens",
-      "meter",
-      "stand",
-      "juli"
+      "1 Meter",
+      "mindestens"
     ]
   },
   {
@@ -2008,8 +2005,8 @@
     "number": 19,
     "category": "Schifffahrtsrecht",
     "subcategory": "Man",
-    "question": "Man hört bei Nebel folgendes Schallsignal mit der Pfeife",
-    "answer": "(lang-kurz-kurz), unmittelbar gefolgt von (lang-kurz-kurz-kurz) etwa jede Minute. Worum handelt es sich dabei? Es ist das Schallsignal eines Schleppverbandes in Fahrt (schleppendes Fahrzeug lang-kurz-kurz; Anhang lang-kurz-kurz-kurz).",
+    "question": "Man hört bei Nebel folgendes Schallsignal mit der Pfeife (lang-kurz-kurz), unmittelbar gefolgt von (lang-kurz-kurz-kurz) etwa jede Minute. Worum handelt es sich dabei?",
+    "answer": "Es ist das Schallsignal eines Schleppverbandes in Fahrt (schleppendes Fahrzeug lang-kurz-kurz; Anhang lang-kurz-kurz-kurz).",
     "keywords": [
       "langkurzkurz",
       "langkurzkurzkurz",
