@@ -83,9 +83,9 @@
                     questionDiv.innerHTML = `
                         <div class="question-id">${q.id} - ${q.category}</div>
                         <div class="question-text">${q.question}</div>
+                        ${q.question_image ? `<div class="images"><img src="${q.question_image}" alt="Question image"></div>` : ''}
                         <div class="answer">${q.answer}</div>
-                        ${q.question_image ? `<div class="images"><strong>Question Image:</strong><br><img src="${q.question_image}" alt="Question image"></div>` : ''}
-                        ${q.answer_image ? `<div class="images"><strong>Answer Image:</strong><br><img src="${q.answer_image}" alt="Answer image"></div>` : ''}
+                        ${q.answer_image ? `<div class="images"><img src="${q.answer_image}" alt="Answer image"></div>` : ''}
                     `;
                     
                     content.appendChild(questionDiv);
