@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>SKS Questions Verification</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f5f5f5;
+        }
+        .question {
+            background-color: white;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .question-id {
+            font-weight: bold;
+            color: #2c3e50;
+            margin-bottom: 10px;
+        }
+        .question-text {
+            font-weight: bold;
+            color: #34495e;
+            margin-bottom: 10px;
+        }
+        .answer {
+            color: #555;
+            margin-bottom: 10px;
+        }
+        .images {
+            margin-top: 10px;
+        }
+        img {
+            max-width: 100%;
+            height: auto;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            margin: 5px 0;
+        }
+        .category {
+            color: #7f8c8d;
+            font-size: 0.9em;
+        }
+        .loading {
+            text-align: center;
+            font-size: 1.2em;
+            color: #7f8c8d;
+        }
+        .error {
+            color: red;
+            text-align: center;
+        }
+    </style>
+</head>
+<body>
+    <h1>SKS Questions Verification</h1>
+    <p>This page displays all questions and answers from the extracted JSON to verify against the PDF.</p>
+    <div id="content" class="loading">Loading questions...</div>
+
+    <script>
+        async function loadQuestions() {
+            try {
+                const response = await fetch('sks.json');
+                if (!response.ok) {
+                    throw new Error('Failed to load JSON');
+                }
+                const questions = await response.json();
+                
+                const content = document.getElementById('content');
+                content.innerHTML = '';
+                
+                questions.forEach(q => {
+                    const questionDiv = document.createElement('div');
+                    questionDiv.className = 'question';
+                    
+                    questionDiv.innerHTML = `
+                        <div class="question-id">${q.id} - ${q.category}</div>
+                        <div class="question-text">${q.question}</div>
+                        <div class="answer">${q.answer}</div>
+                        ${q.question_image ? `<div class="images"><strong>Question Image:</strong><br><img src="${q.question_image}" alt="Question image"></div>` : ''}
+                        ${q.answer_image ? `<div class="images"><strong>Answer Image:</strong><br><img src="${q.answer_image}" alt="Answer image"></div>` : ''}
+                    `;
+                    
+                    content.appendChild(questionDiv);
+                });
+            } catch (error) {
+                document.getElementById('content').innerHTML = '<div class="error">Error loading questions: ' + error.message + '</div>';
+            }
+        }
+        
+        loadQuestions();
+    </script>
+</body>
+</html>

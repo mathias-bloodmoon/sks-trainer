@@ -61,6 +61,9 @@ def main():
 
     print("📘 PDF wird mit PyMuPDF geladen (Bold-Erkennung + Bilder)...")
 
+    all_spans = []
+    all_images = []
+
     with fitz.open(PDF_PATH) as doc:
         for page_num, page in enumerate(doc):
             # === Alle Text-Spans mit Bold-Flag holen ===
@@ -69,84 +72,19 @@ def main():
             for block in text_dict.get("blocks", []):
                 for line in block.get("lines", []):
                     for span in line.get("spans", []):
-                        spans.append({
+                        span_data = {
                             "text": span["text"].strip(),
+                            "x0": span["bbox"][0],
                             "y0": span["bbox"][1],      # obere Kante
                             "y1": span["bbox"][3],      # untere Kante
-                            "is_bold": bool(span["flags"] & 16)  # Bit 4 = bold
-                        })
+                            "is_bold": bool(span["flags"] & 16),  # Bit 4 = bold
+                            "page_num": page_num,
+                            "y_global": page_num * 10000 + span["bbox"][1]
+                        }
+                        spans.append(span_data)
+                        all_spans.append(span_data)
 
-            spans.sort(key=lambda s: s["y0"])
-
-            # === Fragen auf dieser Seite parsen (Bold = Frage, Normal = Antwort) ===
-            question_data = []
-            i = 0
-            while i < len(spans):
-                span = spans[i]
-                if re.search(r"Nummer\s+\d+", span["text"]):
-                    match = re.search(r"Nummer\s+(\d+)", span["text"])
-                    if not match:
-                        i += 1
-                        continue
-
-                    q_num = int(match.group(1))
-                    cat = get_category(question_index)
-                    short = CATEGORY_SHORT.get(cat, "GEN")
-                    qid = f"{short}-{q_num:03d}"
-
-                    q_text_parts = []
-                    q_y_min = None
-                    q_y_max = None
-
-                    a_text_parts = []
-                    a_y_min = None
-                    a_y_max = None
-
-                    i += 1  # skip the "Nummer" span
-                    # Sammle bis zur nächsten "Nummer"
-                    while i < len(spans):
-                        next_span = spans[i]
-                        if re.search(r"Nummer\s+\d+", next_span["text"]):
-                            break  # nächste Frage beginnt
-
-                        if next_span["is_bold"]:
-                            q_text_parts.append(next_span["text"])
-                            if q_y_min is None:
-                                q_y_min = next_span["y0"]
-                            q_y_max = max(q_y_max or next_span["y1"], next_span["y1"])
-                        else:
-                            if a_y_min is None:
-                                a_y_min = next_span["y0"]
-                            a_text_parts.append(next_span["text"])
-                            a_y_max = max(a_y_max or next_span["y1"], next_span["y1"])
-                        i += 1
-
-                    question = clean_text(" ".join(q_text_parts))
-                    answer = clean_text(" ".join(a_text_parts))
-
-                    if not question:
-                        continue
-
-                    question_data.append({
-                        "id": qid,
-                        "number": q_num,
-                        "category": cat,
-                        "subcategory": question.split(maxsplit=1)[0] if question else "Allgemein",
-                        "question": question,
-                        "answer": answer,
-                        "keywords": extract_keywords(answer),
-                        "question_image": None,
-                        "answer_image": None,
-                        "q_y_min": q_y_min,
-                        "q_y_max": q_y_max,
-                        "a_y_min": a_y_min,
-                        "a_y_max": a_y_max
-                    })
-                    question_index += 1
-                    continue
-                i += 1
-
-            # === BILDER dieser Seite extrahieren + zuordnen (question oder answer) ===
+            # === Bilder dieser Seite sammeln ===
             images = page.get_images(full=True)
             for img_idx, img_info in enumerate(images):
                 xref = img_info[0]
@@ -159,56 +97,168 @@ def main():
                 if not rects:
                     continue
                 img_rect = rects[0]
-                img_y = img_rect.y0
+                img_y_global = page_num * 10000 + img_rect.y0
 
-                ext = base.get("ext", "png")
+                all_images.append({
+                    "xref": xref,
+                    "base": base,
+                    "img_y_global": img_y_global,
+                    "page_num": page_num,
+                    "img_idx": img_idx,
+                    "ext": base.get("ext", "png")
+                })
 
-                # Bestes Matching: Frage oder Antwort anhand y-Position
-                best_q = None
-                best_type = None
-                best_dist = float('inf')
+    # === Alle Spans sammeln (in PDF-Reihenfolge) ===
+    all_spans = []
+    all_images = []
 
-                for qd in question_data:
-                    # Bild unter fett gedruckter Frage?
-                    if qd["q_y_min"] - 80 < img_y < qd["q_y_max"] + 150:
-                        dist = abs(img_y - qd["q_y_max"])
-                        if dist < best_dist:
-                            best_dist = dist
-                            best_q = qd
-                            best_type = "question"
+    with fitz.open(PDF_PATH) as doc:
+        for page_num, page in enumerate(doc):
+            # === Alle Text-Spans mit Bold-Flag holen ===
+            text_dict = page.get_text("dict")
+            spans = []
+            for block in text_dict.get("blocks", []):
+                for line in block.get("lines", []):
+                    for span in line.get("spans", []):
+                        span_data = {
+                            "text": span["text"].strip(),
+                            "x0": span["bbox"][0],
+                            "y0": span["bbox"][1],      # obere Kante
+                            "y1": span["bbox"][3],      # untere Kante
+                            "is_bold": bool(span["flags"] & 16),  # Bit 4 = bold
+                            "page_num": page_num,
+                            "y_global": page_num * 10000 + span["bbox"][1]
+                        }
+                        spans.append(span_data)
+                        all_spans.append(span_data)
 
-                    # Bild in normaler Antwort?
-                    if qd["a_y_min"] and qd["a_y_min"] - 80 < img_y < (qd["a_y_max"] or img_y + 300):
-                        dist = abs(img_y - qd["a_y_min"])
-                        if dist < best_dist:
-                            best_dist = dist
-                            best_q = qd
-                            best_type = "answer"
+            # === Bilder dieser Seite sammeln ===
+            images = page.get_images(full=True)
+            for img_idx, img_info in enumerate(images):
+                xref = img_info[0]
+                base = doc.extract_image(xref)
+                if not base:
+                    continue
 
-                if best_q and best_dist < 400:  # Toleranz-Schwelle
-                    typ = best_type
-                    filename = f"img_{best_q['id']}_{typ}_p{page_num+1:03d}_{img_idx}.{ext}"
+                # Position des Bildes holen
+                rects = page.get_image_rects(xref)
+                if not rects:
+                    continue
+                img_rect = rects[0]
+                img_y_global = page_num * 10000 + img_rect.y0
+
+                all_images.append({
+                    "xref": xref,
+                    "base": base,
+                    "img_y_global": img_y_global,
+                    "page_num": page_num,
+                    "img_idx": img_idx,
+                    "ext": base.get("ext", "png")
+                })
+
+    # === Parsing ohne Sortierung (in PDF-Reihenfolge) ===
+    results = []
+    question_index = 0
+    i = 0
+    while i < len(all_spans):
+        span = all_spans[i]
+        if re.search(r"Nummer\s+\d+", span["text"]):
+            match = re.search(r"Nummer\s+(\d+)", span["text"])
+            if not match:
+                i += 1
+                continue
+
+            q_num = int(match.group(1))
+            cat = get_category(question_index)
+            short = CATEGORY_SHORT.get(cat, "GEN")
+            qid = f"{short}-{q_num:03d}"
+
+            q_text_parts = []
+            q_y_min = None
+            q_y_max = None
+
+            a_text_parts = []
+            a_y_min = None
+            a_y_max = None
+
+            i += 1  # skip the "Nummer" span
+            # Sammle bis zur nächsten "Nummer"
+            while i < len(all_spans):
+                next_span = all_spans[i]
+                if re.search(r"Nummer\s+\d+", next_span["text"]):
+                    break  # nächste Frage beginnt
+
+                if next_span["is_bold"]:
+                    q_text_parts.append(next_span["text"])
+                    if q_y_min is None:
+                        q_y_min = next_span["y_global"]
+                    q_y_max = max(q_y_max or next_span["y_global"] + (next_span["y1"] - next_span["y0"]), next_span["y_global"] + (next_span["y1"] - next_span["y0"]))
+                else:
+                    a_text_parts.append(next_span["text"])
+                    if a_y_min is None:
+                        a_y_min = next_span["y_global"]
+                    a_y_max = max(a_y_max or next_span["y_global"] + (next_span["y1"] - next_span["y0"]), next_span["y_global"] + (next_span["y1"] - next_span["y0"]))
+                i += 1
+
+            question = clean_text(" ".join(q_text_parts))
+            answer = clean_text(" ".join(a_text_parts))
+            answer = answer.replace(" - ", " ")  # Remove hyphenation dashes
+
+            if not question:
+                continue
+
+            question_data = {
+                "id": qid,
+                "number": q_num,
+                "category": cat,
+                "subcategory": question.split(maxsplit=1)[0] if question else "Allgemein",
+                "question": question,
+                "answer": answer,
+                "keywords": extract_keywords(answer),
+                "question_image": None,
+                "answer_image": None,
+                "q_y_min": q_y_min,
+                "q_y_max": q_y_max,
+                "a_y_min": a_y_min,
+                "a_y_max": a_y_max
+            }
+
+            # === Bilder zuordnen ===
+            for img in all_images:
+                img_y = img["img_y_global"]
+                typ = None
+                dist = float('inf')
+
+                # Bild unter fett gedruckter Frage?
+                if question_data["q_y_min"] is not None and question_data["q_y_min"] - 80 <= img_y <= question_data["q_y_max"] + 150:
+                    d = abs(img_y - question_data["q_y_max"])
+                    if d < dist:
+                        dist = d
+                        typ = "question"
+
+                # Bild in normaler Antwort?
+                if question_data["a_y_min"] is not None and question_data["a_y_min"] - 80 <= img_y <= (question_data["a_y_max"] or img_y + 300):
+                    d = abs(img_y - question_data["a_y_min"])
+                    if d < dist:
+                        dist = d
+                        typ = "answer"
+
+                if typ and dist < 400:  # Toleranz-Schwelle
+                    filename = f"img_{question_data['id']}_{typ}_p{img['page_num']+1:03d}_{img['img_idx']}.{img['ext']}"
                     path = os.path.join(PICTURES_DIR, filename)
 
                     with open(path, "wb") as f:
-                        f.write(base["image"])
+                        f.write(img["base"]["image"])
 
                     if typ == "question":
-                        best_q["question_image"] = f"pictures/{filename}"
+                        question_data["question_image"] = f"pictures/{filename}"
                     else:
-                        best_q["answer_image"] = f"pictures/{filename}"
-                else:
-                    # Fallback (sehr selten)
-                    if question_data:
-                        qd = question_data[-1]
-                        filename = f"img_{qd['id']}_fallback_p{page_num+1:03d}_{img_idx}.{ext}"
-                        path = os.path.join(PICTURES_DIR, filename)
-                        with open(path, "wb") as f:
-                            f.write(base["image"])
-                        qd["question_image"] = f"pictures/{filename}"
+                        question_data["answer_image"] = f"pictures/{filename}"
 
-            # Alle Fragen dieser Seite ins Gesamtergebnis
-            results.extend(question_data)
+            results.append(question_data)
+            question_index += 1
+            continue
+        i += 1
 
     # === JSON speichern ===
     with open(OUTPUT_JSON, "w", encoding="utf-8") as f:
