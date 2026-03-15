@@ -4,8 +4,8 @@ import json
 import string
 from collections import Counter
 
-PDF_PATH = "Fragenkatalog-SKS.pdf"
-OUTPUT_PATH = "sks.json"
+PDF_PATH = "Fragenkatalog-SKS-2006.pdf"
+OUTPUT_PATH = "sks-questions-2006.json"
 
 # === OFFIZIELLE KAPITEL-GRÖSSEN (Reihenfolge im PDF) ===
 CHAPTERS = [
