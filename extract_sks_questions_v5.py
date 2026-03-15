@@ -83,7 +83,7 @@ def main():
             i = 0
             while i < len(spans):
                 span = spans[i]
-                if re.search(r"Nummer\s+\d+", span["text"]) and span["is_bold"]:
+                if re.search(r"Nummer\s+\d+", span["text"]):
                     match = re.search(r"Nummer\s+(\d+)", span["text"])
                     if not match:
                         i += 1
@@ -94,24 +94,26 @@ def main():
                     short = CATEGORY_SHORT.get(cat, "GEN")
                     qid = f"{short}-{q_num:03d}"
 
-                    q_text_parts = [span["text"]]
-                    q_y_min = span["y0"]
-                    q_y_max = span["y1"]
+                    q_text_parts = []
+                    q_y_min = None
+                    q_y_max = None
 
                     a_text_parts = []
                     a_y_min = None
                     a_y_max = None
 
-                    i += 1
-                    # Sammle bis zur nächsten fett gedruckten "Nummer"
+                    i += 1  # skip the "Nummer" span
+                    # Sammle bis zur nächsten "Nummer"
                     while i < len(spans):
                         next_span = spans[i]
-                        if re.search(r"Nummer\s+\d+", next_span["text"]) and next_span["is_bold"]:
+                        if re.search(r"Nummer\s+\d+", next_span["text"]):
                             break  # nächste Frage beginnt
 
                         if next_span["is_bold"]:
                             q_text_parts.append(next_span["text"])
-                            q_y_max = max(q_y_max, next_span["y1"])
+                            if q_y_min is None:
+                                q_y_min = next_span["y0"]
+                            q_y_max = max(q_y_max or next_span["y1"], next_span["y1"])
                         else:
                             if a_y_min is None:
                                 a_y_min = next_span["y0"]
