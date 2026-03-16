@@ -49,7 +49,8 @@ fun TestScreen(
     val questions = remember { repository.getRandomQuestions(category) }
 
     var currentIndex by remember { mutableIntStateOf(0) }
-    var recognizedText by remember { mutableStateOf("") }
+    var fullRecognizedText by remember { mutableStateOf("") }
+    var currentPartialText by remember { mutableStateOf("") }
     var similarityScore by remember { mutableStateOf<Int?>(null) }
     var isPressing by remember { mutableStateOf(false) }
     var showResults by remember { mutableStateOf(false) }
@@ -57,11 +58,22 @@ fun TestScreen(
     
     var rmsLevel by remember { mutableFloatStateOf(0f) }
 
+    val recognizedText = buildString {
+        if (fullRecognizedText.isNotEmpty()) append(fullRecognizedText)
+        if (fullRecognizedText.isNotEmpty() && currentPartialText.isNotEmpty()) append(" ")
+        if (currentPartialText.isNotEmpty()) append(currentPartialText)
+    }
+
     val speechHelper = remember {
         SpeechRecognizerHelper(
             context = context,
-            onPartialResult = { recognizedText = it },
-            onResult = { recognizedText = it },
+            onPartialResult = { currentPartialText = it },
+            onResult = { 
+                if (it.isNotBlank()) {
+                    fullRecognizedText = if (fullRecognizedText.isEmpty()) it else "$fullRecognizedText $it"
+                }
+                currentPartialText = ""
+            },
             onError = { /* Ignoriere Timeouts */ },
             onVolumeChanged = { rmsLevel = it }
         )
@@ -205,7 +217,8 @@ fun TestScreen(
 
                                         if (hasPermission) {
                                             isPressing = true
-                                            recognizedText = ""
+                                            fullRecognizedText = ""
+                                            currentPartialText = ""
                                             haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                             speechHelper.startListening()
 
@@ -275,7 +288,8 @@ fun TestScreen(
                         onClick = {
                             if (currentIndex < questions.size - 1) {
                                 currentIndex++
-                                recognizedText = ""
+                                fullRecognizedText = ""
+                                currentPartialText = ""
                                 similarityScore = null
                             } else {
                                 statsManager.recordTestResult(correctCount, questions.size)
