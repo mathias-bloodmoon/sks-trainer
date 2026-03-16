@@ -4,15 +4,25 @@ import android.Manifest
 import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.core.*
+import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Mic
-import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.scale
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
@@ -32,6 +42,8 @@ fun TestScreen(
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
+    val haptic = LocalHapticFeedback.current
+    
     val repository = remember { QuestionRepository(context) }
     val statsManager = remember { StatsManager(context) }
     val questions = remember { repository.getRandomQuestions(category) }
@@ -39,21 +51,19 @@ fun TestScreen(
     var currentIndex by remember { mutableIntStateOf(0) }
     var recognizedText by remember { mutableStateOf("") }
     var similarityScore by remember { mutableStateOf<Int?>(null) }
-    var isListening by remember { mutableStateOf(false) }
+    var isPressing by remember { mutableStateOf(false) }
     var showResults by remember { mutableStateOf(false) }
     var correctCount by remember { mutableIntStateOf(0) }
+    
+    var rmsLevel by remember { mutableFloatStateOf(0f) }
 
     val speechHelper = remember {
         SpeechRecognizerHelper(
             context = context,
-            onResult = { 
-                recognizedText = it
-                isListening = false
-            },
-            onError = { 
-                isListening = false
-                // Handle error (e.g., toast or message)
-            }
+            onPartialResult = { recognizedText = it },
+            onResult = { recognizedText = it },
+            onError = { /* Ignoriere Timeouts */ },
+            onRmsChanged = { rmsLevel = it }
         )
     }
 
@@ -64,18 +74,24 @@ fun TestScreen(
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
-        if (isGranted) {
-            isListening = true
-            speechHelper.startListening()
-        }
+        if (!isGranted) { /* Optional Toast */ }
     }
 
+    val infiniteTransition = rememberInfiniteTransition(label = "pulse")
+    val pulseScale by infiniteTransition.animateFloat(
+        initialValue = 1f,
+        targetValue = 1.3f,
+        animationSpec = infiniteRepeatable(
+            animation = tween(800),
+            repeatMode = RepeatMode.Reverse
+        ),
+        label = "pulseScale"
+    )
+    
+    val volumeScale = (1f + (rmsLevel.coerceIn(0f, 10f) / 15f))
+
     if (showResults) {
-        TestResultsScreen(
-            correct = correctCount,
-            total = questions.size,
-            onClose = onBack
-        )
+        TestResultsScreen(correct = correctCount, total = questions.size, onClose = onBack)
         return
     }
 
@@ -127,110 +143,127 @@ fun TestScreen(
 
             Spacer(modifier = Modifier.height(24.dp))
 
-            // User Answer Section
             Box(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(0.3f),
                 contentAlignment = Alignment.TopCenter
             ) {
-                if (recognizedText.isNotEmpty()) {
-                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    if (isPressing) {
                         Text(
-                            text = "Ihre Antwort:",
-                            style = MaterialTheme.typography.labelMedium,
-                            color = MaterialTheme.colorScheme.primary
+                            text = "Ich höre zu...",
+                            color = MaterialTheme.colorScheme.primary,
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 18.sp
                         )
+                    } else if (recognizedText.isNotEmpty()) {
+                        Text(text = "Ihre Antwort:", style = MaterialTheme.typography.labelMedium)
+                    }
+                    
+                    Text(
+                        text = recognizedText,
+                        style = MaterialTheme.typography.bodyLarge,
+                        textAlign = TextAlign.Center,
+                        modifier = Modifier.padding(8.dp)
+                    )
+                    
+                    if (similarityScore != null) {
                         Text(
-                            text = recognizedText,
-                            style = MaterialTheme.typography.bodyLarge,
-                            textAlign = TextAlign.Center,
-                            modifier = Modifier.padding(8.dp)
+                            text = stringResource(id = R.string.score_label, similarityScore!!),
+                            style = MaterialTheme.typography.titleLarge,
+                            color = if (similarityScore!! >= 70) Color(0xFF4CAF50) else MaterialTheme.colorScheme.error,
+                            fontWeight = FontWeight.Bold
                         )
-                        
-                        if (similarityScore != null) {
-                            Text(
-                                text = stringResource(id = R.string.score_label, similarityScore!!),
-                                style = MaterialTheme.typography.titleLarge,
-                                color = if (similarityScore!! >= 70) 
-                                    MaterialTheme.colorScheme.primary 
-                                else 
-                                    MaterialTheme.colorScheme.error,
-                                fontWeight = FontWeight.Bold,
-                                modifier = Modifier.padding(top = 8.dp)
-                            )
-                        }
                     }
                 }
             }
 
-            // Controls
             Column(
                 modifier = Modifier.fillMaxWidth(),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(12.dp)
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 if (similarityScore == null) {
-                    Button(
-                        onClick = {
-                            if (isListening) {
-                                speechHelper.stopListening()
-                                isListening = false
-                            } else {
-                                val hasPermission = ContextCompat.checkSelfPermission(
-                                    context, Manifest.permission.RECORD_AUDIO
-                                ) == PackageManager.PERMISSION_GRANTED
-                                
-                                if (hasPermission) {
-                                    recognizedText = ""
-                                    isListening = true
-                                    speechHelper.startListening()
-                                } else {
-                                    permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                    Text(
+                        text = if (isPressing) "Loslassen zum Beenden" else "Halten zum Sprechen",
+                        style = MaterialTheme.typography.labelSmall,
+                        modifier = Modifier.padding(bottom = 12.dp)
+                    )
+                    
+                    Box(
+                        contentAlignment = Alignment.Center,
+                        modifier = Modifier
+                            .size(140.dp)
+                            .pointerInput(Unit) {
+                                awaitPointerEventScope {
+                                    while (true) {
+                                        awaitFirstDown()
+                                        
+                                        val hasPermission = ContextCompat.checkSelfPermission(
+                                            context, Manifest.permission.RECORD_AUDIO
+                                        ) == PackageManager.PERMISSION_GRANTED
+
+                                        if (hasPermission) {
+                                            isPressing = true
+                                            recognizedText = ""
+                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                            speechHelper.startListening()
+
+                                            waitForUpOrCancellation()
+                                            
+                                            isPressing = false
+                                            rmsLevel = 0f
+                                            speechHelper.stopListening()
+                                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                        } else {
+                                            permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                                            waitForUpOrCancellation()
+                                        }
+                                    }
                                 }
                             }
-                        },
-                        modifier = Modifier.fillMaxWidth()
                     ) {
-                        Icon(
-                            if (isListening) Icons.Default.Stop else Icons.Default.Mic,
-                            contentDescription = null
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
-                        Text(if (isListening) "Stoppen" else "Antwort einsprechen")
+                        if (isPressing) {
+                            Box(
+                                modifier = Modifier
+                                    .size(80.dp)
+                                    .scale(pulseScale * volumeScale)
+                                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.25f), CircleShape)
+                            )
+                        }
+                        
+                        Box(
+                            modifier = Modifier
+                                .size(80.dp)
+                                .clip(CircleShape)
+                                .background(if (isPressing) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary),
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Default.Mic,
+                                contentDescription = "Sprechen",
+                                tint = Color.White,
+                                modifier = Modifier.size(36.dp)
+                            )
+                        }
                     }
 
-                    if (recognizedText.isNotEmpty() && !isListening) {
-                        Row(modifier = Modifier.fillMaxWidth()) {
-                            Button(
-                                onClick = {
-                                    recognizedText = ""
-                                    isListening = true
-                                    speechHelper.startListening()
-                                },
-                                modifier = Modifier.weight(1f),
-                                colors = ButtonDefaults.buttonColors(containerColor = MaterialTheme.colorScheme.secondary)
-                            ) {
-                                Text(stringResource(id = R.string.btn_record_again), fontSize = 12.sp)
-                            }
-                            Spacer(modifier = Modifier.width(8.dp))
-                            Button(
-                                onClick = {
-                                    val score = TextSimilarity.calculateSimilarity(recognizedText, currentQuestion.answer)
-                                    similarityScore = score
-                                    if (score >= 70) correctCount++
-                                },
-                                modifier = Modifier.weight(1f)
-                            ) {
-                                Text(stringResource(id = R.string.btn_confirm))
-                            }
+                    if (recognizedText.isNotEmpty() && !isPressing) {
+                        Button(
+                            onClick = {
+                                val score = TextSimilarity.calculateSimilarity(recognizedText, currentQuestion.answer)
+                                similarityScore = score
+                                if (score >= 70) correctCount++
+                            },
+                            modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
+                        ) {
+                            Text(stringResource(id = R.string.btn_confirm))
                         }
                     }
                 } else {
-                    // Score revealed, show correct answer and "Next"
                     Card(
                         colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-                        modifier = Modifier.fillMaxWidth()
+                        modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
                     ) {
                         Column(modifier = Modifier.padding(16.dp)) {
                             Text("Richtige Antwort:", style = MaterialTheme.typography.labelSmall)
@@ -260,38 +293,20 @@ fun TestScreen(
 }
 
 @Composable
-fun TestResultsScreen(
-    correct: Int,
-    total: Int,
-    onClose: () -> Unit
-) {
+fun TestResultsScreen(correct: Int, total: Int, onClose: () -> Unit) {
     Column(
-        modifier = Modifier
-            .fillMaxSize()
-            .padding(32.dp),
+        modifier = Modifier.fillMaxSize().padding(32.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text(
-            text = stringResource(id = R.string.test_finished),
-            style = MaterialTheme.typography.headlineMedium,
-            fontWeight = FontWeight.Bold
-        )
+        Text(text = "Test Beendet", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(16.dp))
-        Text(
-            text = stringResource(id = R.string.correct_answers, correct, total),
-            style = MaterialTheme.typography.titleLarge
-        )
+        Text(text = "Richtige Antworten: $correct / $total", style = MaterialTheme.typography.titleLarge)
         val percent = (correct.toDouble() / total * 100).toInt()
-        Text(
-            text = "$percent%",
-            style = MaterialTheme.typography.displayLarge,
-            color = MaterialTheme.colorScheme.primary,
-            fontWeight = FontWeight.Black
-        )
+        Text(text = "$percent%", style = MaterialTheme.typography.displayLarge, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Black)
         Spacer(modifier = Modifier.height(48.dp))
         Button(onClick = onClose, modifier = Modifier.fillMaxWidth()) {
-            Text(stringResource(id = R.string.btn_back_home))
+            Text("Zurück zum Start")
         }
     }
 }
