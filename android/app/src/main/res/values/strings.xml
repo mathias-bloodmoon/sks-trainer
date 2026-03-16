@@ -1,0 +1,19 @@
+<resources>
+    <string name="app_name">SKS Trainer</string>
+    <string name="lernen">Lernen</string>
+    <string name="test">Test</string>
+    <string name="statistik">Statistik</string>
+    <string name="app_weiterempfehlen">App weiterempfehlen</string>
+    <string name="navigation">Navigation</string>
+    <string name="schifffahrtsrecht">Schifffahrtsrecht</string>
+    <string name="wetterkunde">Wetterkunde</string>
+    <string name="seemannschaft">Seemannschaft I</string>
+    <string name="zufallig">Zufällig</string>
+    <string name="bestatigen">Bestätigen</string>
+    <string name="antwort_neu_aufnehmen">Antwort neu aufnehmen</string>
+    <string name="weiter">Weiter</string>
+    <string name="zuruck">Zurück</string>
+    <string name="waehle_thema">Wähle ein Thema</string>
+    <string name="antwort_anzeigen">Antwort anzeigen</string>
+    <string name="nachste">Nächste</string>
+</resources>
