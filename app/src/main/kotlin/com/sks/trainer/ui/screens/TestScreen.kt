@@ -63,7 +63,7 @@ fun TestScreen(
             onPartialResult = { recognizedText = it },
             onResult = { recognizedText = it },
             onError = { /* Ignoriere Timeouts */ },
-            onRmsChanged = { rmsLevel = it }
+            onVolumeChanged = { rmsLevel = it }
         )
     }
 

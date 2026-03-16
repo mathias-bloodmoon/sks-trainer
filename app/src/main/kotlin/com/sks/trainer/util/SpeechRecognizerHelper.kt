@@ -14,7 +14,7 @@ class SpeechRecognizerHelper(
     private val onPartialResult: (String) -> Unit,
     private val onResult: (String) -> Unit,
     private val onError: (String) -> Unit,
-    private val onRmsChanged: (Float) -> Unit
+    private val onVolumeChanged: (Float) -> Unit
 ) {
     private var speechRecognizer: SpeechRecognizer? = null
 
@@ -25,7 +25,7 @@ class SpeechRecognizerHelper(
                 setRecognitionListener(object : RecognitionListener {
                     override fun onReadyForSpeech(params: Bundle?) { Log.d("Speech", "Ready") }
                     override fun onBeginningOfSpeech() { Log.d("Speech", "Started") }
-                    override fun onRmsChanged(rmsdB: Float) { onRmsChanged(rmsdB) }
+                    override fun onRmsChanged(rmsdB: Float) { onVolumeChanged(rmsdB) }
                     override fun onBufferReceived(buffer: ByteArray?) {}
                     override fun onEndOfSpeech() { Log.d("Speech", "End") }
                     
