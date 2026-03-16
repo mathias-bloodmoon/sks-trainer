@@ -1,7 +1,7 @@
 plugins {
     id("com.android.application")
     id("org.jetbrains.kotlin.android")
-    id("kotlin-serialization")
+    id("org.jetbrains.kotlin.plugin.serialization")
 }
 
 android {
