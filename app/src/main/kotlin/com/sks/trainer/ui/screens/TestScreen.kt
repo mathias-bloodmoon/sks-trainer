@@ -17,11 +17,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.sks.trainer.R
 import com.sks.trainer.data.QuestionRepository
 import com.sks.trainer.data.StatsManager
-import com.sks.trainer.model.SksQuestion
 import com.sks.trainer.util.SpeechRecognizerHelper
 import com.sks.trainer.util.TextSimilarity
 
@@ -64,7 +64,7 @@ fun TestScreen(
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
-        if (it) {
+        if (isGranted) {
             isListening = true
             speechHelper.startListening()
         }

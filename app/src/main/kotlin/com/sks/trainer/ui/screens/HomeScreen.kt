@@ -4,7 +4,7 @@ import android.content.Intent
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.BarChart
+import androidx.compose.material.icons.filled.Assessment
 import androidx.compose.material.icons.filled.School
 import androidx.compose.material.icons.filled.Share
 import androidx.compose.material.icons.filled.Timer
@@ -64,7 +64,7 @@ fun HomeScreen(
         Row(modifier = Modifier.fillMaxWidth()) {
             HomeButton(
                 text = stringResource(id = R.string.home_statistik),
-                icon = Icons.Default.BarChart,
+                icon = Icons.Default.Assessment,
                 modifier = Modifier.weight(1f),
                 onClick = onNavigateToStats
             )
