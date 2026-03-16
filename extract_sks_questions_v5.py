@@ -9,21 +9,19 @@ PDF_PATH = "Fragenkatalog-SKS.pdf"
 OUTPUT_JSON = "sks.json"
 PICTURES_DIR = "pictures"
 
-# Offizielle Kapitel (wie bisher)
+# Offizielle Kapitel
 CHAPTERS = [
     ("Navigation",         118),
     ("Schifffahrtsrecht",  110),
     ("Wetterkunde",        101),
-    ("Seemannschaft I",    163),
-    ("Seemannschaft II",   146),
+    ("Seemannschaft I",    163)
 ]
 
 CATEGORY_SHORT = {
     "Navigation":        "NAV",
     "Schifffahrtsrecht": "RECHT",
     "Wetterkunde":       "WET",
-    "Seemannschaft I":   "SEEM1",
-    "Seemannschaft II":  "SEEM2"
+    "Seemannschaft I":   "SEEM1"
 }
 
 
