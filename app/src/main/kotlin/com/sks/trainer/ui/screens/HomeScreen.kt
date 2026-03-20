@@ -1,19 +1,17 @@
 package com.sks.trainer.ui.screens
 
 import android.content.Intent
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Assessment
-import androidx.compose.material.icons.filled.School
-import androidx.compose.material.icons.filled.Share
-import androidx.compose.material.icons.filled.Timer
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.painter.Painter
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
@@ -36,6 +34,13 @@ fun HomeScreen(
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
+        // App Icon (geändert von Icon zu Image ohne Einfärbung)
+        Image(
+            painter = painterResource(id = R.drawable.ic_sks_lighthouse),
+            contentDescription = null,
+            modifier = Modifier.size(120.dp).padding(bottom = 16.dp)
+        )
+        
         Text(
             text = stringResource(id = R.string.app_name),
             style = MaterialTheme.typography.headlineLarge,
@@ -46,14 +51,14 @@ fun HomeScreen(
         Row(modifier = Modifier.fillMaxWidth()) {
             HomeButton(
                 text = stringResource(id = R.string.home_lernen),
-                icon = Icons.Default.School,
+                iconPainter = painterResource(id = R.drawable.icon_home_lernen), 
                 modifier = Modifier.weight(1f),
                 onClick = onNavigateToLernen
             )
             Spacer(modifier = Modifier.width(16.dp))
             HomeButton(
                 text = stringResource(id = R.string.home_test),
-                icon = Icons.Default.Timer,
+                iconPainter = painterResource(id = R.drawable.icon_home_test), 
                 modifier = Modifier.weight(1f),
                 onClick = onNavigateToTest
             )
@@ -64,14 +69,14 @@ fun HomeScreen(
         Row(modifier = Modifier.fillMaxWidth()) {
             HomeButton(
                 text = stringResource(id = R.string.home_statistik),
-                icon = Icons.Default.Assessment,
+                iconPainter = painterResource(id = R.drawable.icon_home_statistik), 
                 modifier = Modifier.weight(1f),
                 onClick = onNavigateToStats
             )
             Spacer(modifier = Modifier.width(16.dp))
             HomeButton(
                 text = stringResource(id = R.string.home_share),
-                icon = Icons.Default.Share,
+                iconPainter = painterResource(id = R.drawable.icon_home_empfehlen), 
                 modifier = Modifier.weight(1f),
                 onClick = {
                     val sendIntent: Intent = Intent().apply {
@@ -90,30 +95,31 @@ fun HomeScreen(
 @Composable
 fun HomeButton(
     text: String,
-    icon: ImageVector,
+    iconPainter: Painter,
     modifier: Modifier = Modifier,
     onClick: () -> Unit
 ) {
     Button(
         onClick = onClick,
         modifier = modifier
-            .height(120.dp),
+            .height(160.dp), // Höhe erhöht, damit das große Icon genug Platz hat
         shape = RoundedCornerShape(12.dp),
+        elevation = ButtonDefaults.buttonElevation(defaultElevation = 0.dp, pressedElevation = 0.dp), // Kein Schatten für transparenten Look
         colors = ButtonDefaults.buttonColors(
-            containerColor = MaterialTheme.colorScheme.primaryContainer,
-            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+            containerColor = Color.Transparent, // Pinker Hintergrund entfernt
+            contentColor = MaterialTheme.colorScheme.onBackground // Textfarbe passt sich an Light/Dark Mode an
         )
     ) {
         Column(
             horizontalAlignment = Alignment.CenterHorizontally,
             verticalArrangement = Arrangement.Center
         ) {
-            Icon(
-                imageVector = icon,
+            Image(
+                painter = iconPainter,
                 contentDescription = null,
-                modifier = Modifier.size(40.dp)
+                modifier = Modifier.size(80.dp) // Icons doppelt so groß (von 40 auf 80)
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(12.dp))
             Text(
                 text = text,
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center,
