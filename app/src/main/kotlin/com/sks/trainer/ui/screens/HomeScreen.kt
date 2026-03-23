@@ -3,7 +3,9 @@ package com.sks.trainer.ui.screens
 import android.content.Intent
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
@@ -26,26 +28,25 @@ fun HomeScreen(
 ) {
     val context = LocalContext.current
     val shareText = stringResource(id = R.string.share_text)
+    
+    // Wir merken uns den Scroll-Zustand
+    val scrollState = rememberScrollState()
 
+    // .verticalScroll(scrollState) macht die Spalte scrollbar, wenn der Platz nicht ausreicht!
     Column(
         modifier = Modifier
             .fillMaxSize()
-            .padding(16.dp),
+            .padding(16.dp)
+            .verticalScroll(scrollState), 
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        // App Icon (geändert von Icon zu Image ohne Einfärbung)
-        Image(
-            painter = painterResource(id = R.drawable.ic_sks_lighthouse),
-            contentDescription = null,
-            modifier = Modifier.size(120.dp).padding(bottom = 16.dp)
-        )
-        
+
         Text(
             text = stringResource(id = R.string.app_name),
             style = MaterialTheme.typography.headlineLarge,
             fontWeight = FontWeight.Bold,
-            modifier = Modifier.padding(bottom = 32.dp)
+            modifier = Modifier.padding(bottom = 32.dp, top = 32.dp) // Oben auch etwas Padding, falls man scrollt
         )
 
         Row(modifier = Modifier.fillMaxWidth()) {
@@ -89,6 +90,9 @@ fun HomeScreen(
                 }
             )
         }
+        
+        // Etwas Platz am Ende der scrollbaren Liste
+        Spacer(modifier = Modifier.height(32.dp))
     }
 }
 
@@ -124,7 +128,7 @@ fun HomeButton(
                 text = text,
                 textAlign = androidx.compose.ui.text.style.TextAlign.Center,
                 fontWeight = FontWeight.Medium,
-                fontSize = 14.sp
+                fontSize = 18.sp
             )
         }
     }

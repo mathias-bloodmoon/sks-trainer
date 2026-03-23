@@ -3,6 +3,8 @@ package com.sks.trainer.ui.screens
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
@@ -11,12 +13,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
-import com.sks.trainer.R
 import com.sks.trainer.data.QuestionRepository
 import com.sks.trainer.data.StatsManager
 import com.sks.trainer.model.SksQuestion
@@ -84,7 +83,7 @@ fun LearningScreen(
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(vertical = 24.dp),
+                    .padding(top = 24.dp, bottom = 8.dp),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 Button(
@@ -94,9 +93,11 @@ fun LearningScreen(
                             isFlipped = false
                         }
                     },
-                    enabled = currentIndex > 0
+                    enabled = currentIndex > 0,
+                    shape = MaterialTheme.shapes.medium, // Etwas eckiger, modern
+                    modifier = Modifier.height(48.dp)
                 ) {
-                    Text("Vorherige")
+                    Text("Vorherige", fontWeight = FontWeight.Bold)
                 }
 
                 Button(
@@ -107,9 +108,11 @@ fun LearningScreen(
                         } else {
                             onBack()
                         }
-                    }
+                    },
+                    shape = MaterialTheme.shapes.medium,
+                    modifier = Modifier.height(48.dp)
                 ) {
-                    Text(if (currentIndex < questions.size - 1) "Nächste" else "Abschließen")
+                    Text(if (currentIndex < questions.size - 1) "Nächste" else "Abschließen", fontWeight = FontWeight.Bold)
                 }
             }
         }
@@ -135,7 +138,11 @@ fun Flashcard(
                 cameraDistance = 12f * density
             }
             .clickable { onFlip() },
-        elevation = CardDefaults.cardElevation(defaultElevation = 4.dp)
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.primary, 
+            contentColor = MaterialTheme.colorScheme.onPrimary
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = 8.dp)
     ) {
         Box(
             modifier = Modifier.fillMaxSize(),
@@ -143,45 +150,56 @@ fun Flashcard(
         ) {
             if (rotation <= 90f) {
                 // Front Side (Question)
-                Column(
-                    modifier = Modifier.padding(24.dp),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .verticalScroll(rememberScrollState())
+                        .padding(24.dp),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "FRAGE",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.primary,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = question.question,
-                        style = MaterialTheme.typography.headlineSmall,
-                        textAlign = TextAlign.Center,
-                        lineHeight = 32.sp
-                    )
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "FRAGE",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.secondary, // Das neue Gelb
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        
+                        // FRAGE: Nutzt jetzt den zentralen "titleMedium"-Style
+                        Text(
+                            text = question.question,
+                            style = MaterialTheme.typography.titleMedium,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             } else {
                 // Back Side (Answer)
-                Column(
+                Box(
                     modifier = Modifier
-                        .padding(24.dp)
-                        .graphicsLayer { rotationY = 180f },
-                    horizontalAlignment = Alignment.CenterHorizontally
+                        .fillMaxSize()
+                        .graphicsLayer { rotationY = 180f }
+                        .verticalScroll(rememberScrollState())
+                        .padding(24.dp),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = "ANTWORT",
-                        style = MaterialTheme.typography.labelSmall,
-                        color = MaterialTheme.colorScheme.secondary,
-                        fontWeight = FontWeight.Bold
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = question.answer,
-                        style = MaterialTheme.typography.bodyLarge,
-                        textAlign = TextAlign.Center,
-                        lineHeight = 24.sp
-                    )
+                    Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                        Text(
+                            text = "ANTWORT",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.secondary, // Das neue Gelb
+                            fontWeight = FontWeight.Bold
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        
+                        // ANTWORT: Nutzt exakt denselben zentralen "titleMedium"-Style
+                        Text(
+                            text = question.answer,
+                            style = MaterialTheme.typography.titleMedium,
+                            textAlign = TextAlign.Center
+                        )
+                    }
                 }
             }
         }

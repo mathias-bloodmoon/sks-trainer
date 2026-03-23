@@ -11,14 +11,13 @@ import androidx.compose.ui.platform.LocalView
 import androidx.core.view.WindowCompat
 
 private val LightColorScheme = lightColorScheme(
-    primary = Blue40,
-    secondary = BlueGrey40,
+    primary = SksBlue, // <-- Hier habe ich das SKS-Blau als primäre Farbe gesetzt
+    onPrimary = White, // Text auf Buttons ist damit automatisch weiß
+    secondary = SksYellow, // <-- Akzentfarbe (Leuchtturm-Gelb)
+    onSecondary = Black,
     tertiary = Cyan40,
-    background = White,
+    background = AppBackground, 
     surface = White,
-    onPrimary = White,
-    onSecondary = White,
-    onTertiary = White,
     onBackground = Black,
     onSurface = Black,
 )

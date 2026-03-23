@@ -5,15 +5,20 @@ import android.content.pm.PackageManager
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.gestures.waitForUpOrCancellation
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Mic
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -32,6 +37,7 @@ import androidx.core.content.ContextCompat
 import com.sks.trainer.R
 import com.sks.trainer.data.QuestionRepository
 import com.sks.trainer.data.StatsManager
+import com.sks.trainer.model.SksQuestion
 import com.sks.trainer.util.SpeechRecognizerHelper
 import com.sks.trainer.util.TextSimilarity
 
@@ -46,15 +52,16 @@ fun TestScreen(
     
     val repository = remember { QuestionRepository(context) }
     val statsManager = remember { StatsManager(context) }
-    val questions = remember { repository.getRandomQuestions(category) }
+    
+    val questions = rememberSaveable(category) { repository.getRandomQuestions(category) }
 
-    var currentIndex by remember { mutableIntStateOf(0) }
-    var fullRecognizedText by remember { mutableStateOf("") }
-    var currentPartialText by remember { mutableStateOf("") }
-    var similarityScore by remember { mutableStateOf<Int?>(null) }
-    var isPressing by remember { mutableStateOf(false) }
-    var showResults by remember { mutableStateOf(false) }
-    var correctCount by remember { mutableIntStateOf(0) }
+    var currentIndex by rememberSaveable { mutableIntStateOf(0) }
+    var fullRecognizedText by rememberSaveable { mutableStateOf("") }
+    var currentPartialText by rememberSaveable { mutableStateOf("") } 
+    var similarityScore by rememberSaveable { mutableStateOf<Int?>(null) }
+    var isPressing by remember { mutableStateOf(false) } 
+    var showResults by rememberSaveable { mutableStateOf(false) }
+    var correctCount by rememberSaveable { mutableIntStateOf(0) }
     
     var rmsLevel by remember { mutableFloatStateOf(0f) }
 
@@ -86,7 +93,9 @@ fun TestScreen(
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) { isGranted ->
-        if (!isGranted) { /* Optional Toast */ }
+        if (!isGranted) { 
+            // Optionaler Toast / Hinweis
+        }
     }
 
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
@@ -120,6 +129,11 @@ fun TestScreen(
         topBar = {
             TopAppBar(
                 title = { Text("Test: $category") },
+                navigationIcon = {
+                    IconButton(onClick = onBack) {
+                        Icon(Icons.Default.ArrowBack, contentDescription = "Zurück")
+                    }
+                },
                 actions = {
                     Text(
                         text = "${currentIndex + 1}/${questions.size}",
@@ -137,168 +151,276 @@ fun TestScreen(
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            Card(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(0.4f),
-                elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
-            ) {
-                Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                    Text(
-                        text = currentQuestion.question,
-                        style = MaterialTheme.typography.headlineSmall,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(24.dp)
-                    )
-                }
-            }
-
-            Spacer(modifier = Modifier.height(24.dp))
-
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(0.3f),
-                contentAlignment = Alignment.TopCenter
-            ) {
-                Column(horizontalAlignment = Alignment.CenterHorizontally) {
-                    if (isPressing) {
-                        Text(
-                            text = "Ich höre zu...",
-                            color = MaterialTheme.colorScheme.primary,
-                            fontWeight = FontWeight.Bold,
-                            fontSize = 18.sp
-                        )
-                    } else if (recognizedText.isNotEmpty()) {
-                        Text(text = "Ihre Antwort:", style = MaterialTheme.typography.labelMedium)
-                    }
-                    
-                    Text(
-                        text = recognizedText,
-                        style = MaterialTheme.typography.bodyLarge,
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(8.dp)
-                    )
-                    
-                    if (similarityScore != null) {
-                        Text(
-                            text = stringResource(id = R.string.score_label, similarityScore!!),
-                            style = MaterialTheme.typography.titleLarge,
-                            color = if (similarityScore!! >= 70) Color(0xFF4CAF50) else MaterialTheme.colorScheme.error,
-                            fontWeight = FontWeight.Bold
-                        )
-                    }
-                }
-            }
-
+            // GEMEINSAMER SCROLL-BEREICH FÜR ALLES
             Column(
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+                    .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                if (similarityScore == null) {
-                    Text(
-                        text = if (isPressing) "Loslassen zum Beenden" else "Halten zum Sprechen",
-                        style = MaterialTheme.typography.labelSmall,
-                        modifier = Modifier.padding(bottom = 12.dp)
-                    )
-                    
+                
+                // 1. KARTEN-BOX: PRÜFUNGSFRAGE
+                OutlinedCard(
+                    modifier = Modifier.fillMaxWidth(),
+                    shape = MaterialTheme.shapes.medium,
+                    border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)),
+                    colors = CardDefaults.outlinedCardColors(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        contentColor = MaterialTheme.colorScheme.onSurface
+                    ),
+                    elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                ) {
                     Box(
-                        contentAlignment = Alignment.Center,
                         modifier = Modifier
-                            .size(140.dp)
-                            .pointerInput(Unit) {
-                                awaitPointerEventScope {
-                                    while (true) {
-                                        awaitFirstDown()
-                                        
-                                        val hasPermission = ContextCompat.checkSelfPermission(
-                                            context, Manifest.permission.RECORD_AUDIO
-                                        ) == PackageManager.PERMISSION_GRANTED
+                            .fillMaxWidth()
+                            .padding(24.dp), 
+                        contentAlignment = Alignment.Center
+                    ) {
+                        Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                            Text(
+                                text = "PRÜFUNGSFRAGE",
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.primary,
+                                fontWeight = FontWeight.Bold
+                            )
+                            Spacer(modifier = Modifier.height(16.dp))
+                            
+                            Text(
+                                text = currentQuestion.question,
+                                style = MaterialTheme.typography.headlineSmall, // Zentrale Font Size
+                                textAlign = TextAlign.Center
+                            )
+                        }
+                    }
+                }
 
-                                        if (hasPermission) {
-                                            isPressing = true
-                                            fullRecognizedText = ""
-                                            currentPartialText = ""
-                                            haptic.performHapticFeedback(HapticFeedbackType.LongPress)
-                                            speechHelper.startListening()
+                // 2. KARTEN-BOX: IHRE ANTWORT
+                if (isPressing || recognizedText.isNotEmpty()) {
+                    Spacer(modifier = Modifier.height(24.dp))
+                    OutlinedCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.medium,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)),
+                        colors = CardDefaults.outlinedCardColors(
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            contentColor = MaterialTheme.colorScheme.onSurface
+                        ),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(24.dp), 
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    text = if (isPressing && recognizedText.isEmpty()) "ICH HÖRE ZU..." else "IHRE ANTWORT",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
+                                
+                                Text(
+                                    text = recognizedText,
+                                    // SELBE FONT SIZE WIE DIE PRÜFUNGSFRAGE
+                                    style = MaterialTheme.typography.headlineSmall, 
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        }
+                    }
+                }
 
-                                            waitForUpOrCancellation()
+                // 3. KARTEN-BOX: RICHTIGE ANTWORT
+                if (similarityScore != null) {
+                    Spacer(modifier = Modifier.height(24.dp))
+                    OutlinedCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        shape = MaterialTheme.shapes.medium,
+                        border = BorderStroke(1.dp, MaterialTheme.colorScheme.primary.copy(alpha = 0.3f)),
+                        colors = CardDefaults.outlinedCardColors(
+                            containerColor = MaterialTheme.colorScheme.surface,
+                            contentColor = MaterialTheme.colorScheme.onSurface
+                        ),
+                        elevation = CardDefaults.cardElevation(defaultElevation = 0.dp)
+                    ) {
+                        Box(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(24.dp), 
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                                Text(
+                                    text = "RICHTIGE ANTWORT",
+                                    style = MaterialTheme.typography.labelMedium,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    fontWeight = FontWeight.Bold
+                                )
+                                Spacer(modifier = Modifier.height(16.dp))
+                                
+                                Text(
+                                    text = currentQuestion.answer,
+                                    // SELBE FONT SIZE WIE DIE PRÜFUNGSFRAGE
+                                    style = MaterialTheme.typography.headlineSmall, 
+                                    textAlign = TextAlign.Center
+                                )
+                            }
+                        }
+                    }
+                }
+                
+                // Etwas Platz am Ende des scrollbaren Bereichs, damit es nicht direkt am Button klebt
+                Spacer(modifier = Modifier.height(16.dp))
+            } 
+
+            // FESTER BEREICH UNTEN: Mic Button links, Text darunter. Bestätigen/Nächste Button rechts.
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.SpaceBetween // Schiebt das Mic nach links und den Button nach rechts
+            ) {
+                // Linke Seite: Entweder Mikrofon oder das kalkulierte Ergebnis
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.Center,
+                    modifier = Modifier.weight(0.4f) // Nimmt etwa 40% des Platzes unten ein
+                ) {
+                    if (similarityScore == null) {
+                        // Noch nicht bestätigt -> Zeige Mikrofon
+                        Box(
+                            contentAlignment = Alignment.Center,
+                            modifier = Modifier
+                                .size(88.dp)
+                                .pointerInput(Unit) {
+                                    awaitPointerEventScope {
+                                        while (true) {
+                                            awaitFirstDown()
                                             
-                                            isPressing = false
-                                            rmsLevel = 0f
-                                            speechHelper.stopListening()
-                                            haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-                                        } else {
-                                            permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
-                                            waitForUpOrCancellation()
+                                            val hasPermission = ContextCompat.checkSelfPermission(
+                                                context, Manifest.permission.RECORD_AUDIO
+                                            ) == PackageManager.PERMISSION_GRANTED
+
+                                            if (hasPermission) {
+                                                isPressing = true
+                                                if (similarityScore != null) {
+                                                    // Wenn bereits eine Punktzahl existiert, starten wir eine neue Antwort für dieselbe Frage
+                                                    similarityScore = null 
+                                                }
+                                                fullRecognizedText = ""
+                                                currentPartialText = ""
+                                                haptic.performHapticFeedback(HapticFeedbackType.LongPress)
+                                                speechHelper.startListening()
+
+                                                waitForUpOrCancellation()
+                                                
+                                                isPressing = false
+                                                rmsLevel = 0f
+                                                speechHelper.stopListening()
+                                                haptic.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                                            } else {
+                                                permissionLauncher.launch(Manifest.permission.RECORD_AUDIO)
+                                                waitForUpOrCancellation()
+                                            }
                                         }
                                     }
                                 }
+                        ) {
+                            if (isPressing) {
+                                Box(
+                                    modifier = Modifier
+                                        .size(64.dp)
+                                        .scale(pulseScale * volumeScale)
+                                        .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.25f), CircleShape)
+                                )
                             }
-                    ) {
-                        if (isPressing) {
+                            
                             Box(
                                 modifier = Modifier
-                                    .size(80.dp)
-                                    .scale(pulseScale * volumeScale)
-                                    .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.25f), CircleShape)
-                            )
+                                    .size(64.dp)
+                                    .clip(CircleShape)
+                                    .background(if (isPressing) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Mic,
+                                    contentDescription = "Sprechen",
+                                    tint = Color.White,
+                                    modifier = Modifier.size(28.dp)
+                                )
+                            }
                         }
                         
-                        Box(
-                            modifier = Modifier
-                                .size(80.dp)
-                                .clip(CircleShape)
-                                .background(if (isPressing) MaterialTheme.colorScheme.error else MaterialTheme.colorScheme.primary),
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Icon(
-                                imageVector = Icons.Default.Mic,
-                                contentDescription = "Sprechen",
-                                tint = Color.White,
-                                modifier = Modifier.size(36.dp)
-                            )
-                        }
+                        // Text unterhalb des Mikrofons
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Text(
+                            text = if (isPressing) "Loslassen zum Beenden" else "Halten zum Sprechen",
+                            style = MaterialTheme.typography.labelSmall,
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                            textAlign = TextAlign.Center
+                        )
+                    } else {
+                        // Wurde bestätigt -> Zeige Ergebnis anstelle des Mikrofons an
+                        Text(
+                            text = stringResource(id = R.string.score_label, similarityScore!!),
+                            style = MaterialTheme.typography.titleLarge,
+                            // Die Farbcodierung wurde entfernt, der Text ist nun immer schwarz
+                            color = MaterialTheme.colorScheme.onBackground,
+                            fontWeight = FontWeight.Bold,
+                            textAlign = TextAlign.Center
+                        )
                     }
+                }
 
-                    if (recognizedText.isNotEmpty() && !isPressing) {
+                // Rechte Seite: Bestätigen oder Nächste-Button
+                Box(
+                    modifier = Modifier.weight(0.6f), // Nimmt die restlichen 60% des Platzes ein
+                    contentAlignment = Alignment.CenterEnd // Richtet den Button rechts aus
+                ) {
+                    if (similarityScore == null) {
+                        // Zeige den Bestätigen-Button an, sobald man gesprochen hat
                         Button(
                             onClick = {
                                 val score = TextSimilarity.calculateSimilarity(recognizedText, currentQuestion.answer)
                                 similarityScore = score
                                 if (score >= 70) correctCount++
                             },
-                            modifier = Modifier.fillMaxWidth().padding(top = 16.dp)
+                            enabled = recognizedText.isNotEmpty() && !isPressing,
+                            shape = MaterialTheme.shapes.medium,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 16.dp)
+                                .height(56.dp) // Button etwas höher machen für bessere Bedienbarkeit
                         ) {
-                            Text(stringResource(id = R.string.btn_confirm))
+                            Text(stringResource(id = R.string.btn_confirm), fontWeight = FontWeight.Bold)
                         }
-                    }
-                } else {
-                    Card(
-                        colors = CardDefaults.cardColors(containerColor = MaterialTheme.colorScheme.surfaceVariant),
-                        modifier = Modifier.fillMaxWidth().padding(bottom = 16.dp)
-                    ) {
-                        Column(modifier = Modifier.padding(16.dp)) {
-                            Text("Richtige Antwort:", style = MaterialTheme.typography.labelSmall)
-                            Text(currentQuestion.answer, style = MaterialTheme.typography.bodyMedium)
+                    } else {
+                        // Zeige den Nächste-Button an, wenn die Auswertung da ist
+                        Button(
+                            onClick = {
+                                if (currentIndex < questions.size - 1) {
+                                    currentIndex++
+                                    fullRecognizedText = ""
+                                    currentPartialText = ""
+                                    similarityScore = null
+                                } else {
+                                    statsManager.recordTestResult(correctCount, questions.size)
+                                    showResults = true
+                                }
+                            },
+                            shape = MaterialTheme.shapes.medium,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(start = 16.dp)
+                                .height(56.dp)
+                        ) {
+                            Text(stringResource(id = R.string.btn_next), fontWeight = FontWeight.Bold)
                         }
-                    }
-                    
-                    Button(
-                        onClick = {
-                            if (currentIndex < questions.size - 1) {
-                                currentIndex++
-                                fullRecognizedText = ""
-                                currentPartialText = ""
-                                similarityScore = null
-                            } else {
-                                statsManager.recordTestResult(correctCount, questions.size)
-                                showResults = true
-                            }
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Text(stringResource(id = R.string.btn_next))
                     }
                 }
             }
@@ -319,8 +441,12 @@ fun TestResultsScreen(correct: Int, total: Int, onClose: () -> Unit) {
         val percent = (correct.toDouble() / total * 100).toInt()
         Text(text = "$percent%", style = MaterialTheme.typography.displayLarge, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Black)
         Spacer(modifier = Modifier.height(48.dp))
-        Button(onClick = onClose, modifier = Modifier.fillMaxWidth()) {
-            Text("Zurück zum Start")
+        Button(
+            onClick = onClose, 
+            shape = MaterialTheme.shapes.medium,
+            modifier = Modifier.fillMaxWidth().height(48.dp)
+        ) {
+            Text("Zurück zum Start", fontWeight = FontWeight.Bold)
         }
     }
 }
