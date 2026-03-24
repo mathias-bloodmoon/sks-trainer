@@ -1,6 +1,6 @@
 # SKS Trainer ⛵
 
-Der **SKS Trainer** ist eine moderne Android-Lern-App, die speziell zur Vorbereitung auf den Sportküstenschifferschein (SKS) entwickelt wurde. Sie bietet eine effiziente Möglichkeit, den amtlichen Fragenkatalog per Multiple-Choice oder per Spracheingabe zu trainieren.
+Der **SKS Trainer** ist eine moderne Android-Lern-App, die speziell zur Vorbereitung auf den Sportküstenschifferschein (SKS) entwickelt wurde. Sie bietet eine effiziente Möglichkeit, den amtlichen Fragenkatalog zu trainieren.
 
 ## ✨ Features
 
@@ -24,7 +24,6 @@ Der **SKS Trainer** ist eine moderne Android-Lern-App, die speziell zur Vorberei
 ### 🎨 Modernes Design
 *   Komplett in **Jetpack Compose** geschrieben.
 *   Maritimes Farbschema im SKS-Dunkelblau.
-*   Unterstützt Light- und Dark-Mode.
 
 ## 🛠️ Technische Details
 *   **Sprache:** Kotlin
@@ -33,15 +32,6 @@ Der **SKS Trainer** ist eine moderne Android-Lern-App, die speziell zur Vorberei
 *   **Navigation:** Navigation Compose
 *   **Datenspeicherung:** JSON-basierte Speicherung des Fragenkatalogs im `assets`-Ordner. Lokale Speicherung von Statistiken und Favoriten über `kotlinx.serialization` direkt auf dem Gerät.
 *   **Spracherkennung:** Android `SpeechRecognizer` API
-
-## 🚀 Installation & Build
-
-1. Klone das Repository:
-   ```bash
-   git clone https://github.com/dein-benutzername/sks-trainer.git
-   ```
-2. Öffne das Projekt in **Android Studio**.
-3. Baue das Projekt mit Gradle und starte es auf einem Emulator oder einem physischen Android-Gerät.
 
 ## 📝 Lizenz & Rechtliches
 *   Die App basiert auf dem amtlichen Fragenkatalog für den Sportküstenschifferschein (SKS) der Wasserstraßen- und Schifffahrtsverwaltung des Bundes (WSV) / ELWIS.
