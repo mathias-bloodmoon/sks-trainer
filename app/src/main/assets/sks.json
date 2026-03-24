@@ -8,10 +8,7 @@
     "answer": "Auf Vollständigkeit der Unterlagen und deren Berichtigung auf den neuesten Stand.",
     "keywords": [
       "vollständigkeit",
-      "unterlagen",
-      "deren",
-      "berichtigung",
-      "neuesten"
+      "berichtigung"
     ],
     "question_image": null,
     "answer_image": null,
@@ -147,7 +144,7 @@
     "category": "Navigation",
     "subcategory": "Was",
     "question": "Was bedeutet der Stempel auf der britischen Seekarte: Corrected up to N.T.M. 3595 1998?",
-    "answer": "",
+    "answer": "Seekarte ist berichtigt bis zur Mitteilung Nummer 3595 der Admiralty Notices to Mariners (N.T.M.) in 1998.",
     "keywords": [],
     "question_image": null,
     "answer_image": null,
@@ -2768,7 +2765,7 @@
       "lichter",
       "müssen"
     ],
-    "question_image": "pictures/img_RECHT-017_question_p032_2.png",
+    "question_image": null,
     "answer_image": null,
     "q_y_min": 300658.8356933594,
     "q_y_max": 310554.5106201172,
@@ -2810,7 +2807,7 @@
       "fahrt",
       "schleppendes"
     ],
-    "question_image": "pictures/img_RECHT-019_question_p032_1.png",
+    "question_image": null,
     "answer_image": null,
     "q_y_min": 310280.77572631836,
     "q_y_max": 310403.97372436523,
@@ -2831,7 +2828,7 @@
       "fahrzeug",
       "grund"
     ],
-    "question_image": "pictures/img_RECHT-020_question_p032_2.png",
+    "question_image": null,
     "answer_image": null,
     "q_y_min": 310519.095703125,
     "q_y_max": 310554.51068115234,
@@ -2852,8 +2849,8 @@
       "trawlt",
       "fahrt"
     ],
-    "question_image": "pictures/img_RECHT-021_question_p033_2.png",
-    "answer_image": "pictures/img_RECHT-021_answer_p033_0.png",
+    "question_image": "img_RECHT-021_question_p032_2.png",
+    "answer_image": null,
     "q_y_min": 310669.63568115234,
     "q_y_max": 320462.89071655273,
     "a_y_min": 320069.6822280884,
@@ -2873,7 +2870,7 @@
       "ohne",
       "durchs"
     ],
-    "question_image": "pictures/img_RECHT-022_question_p033_1.png",
+    "question_image": "img_RECHT-022_question_p033_1.png",
     "answer_image": null,
     "q_y_min": 320237.9356842041,
     "q_y_max": 320337.55072021484,
@@ -2894,7 +2891,7 @@
       "ohne",
       "durchs"
     ],
-    "question_image": "pictures/img_RECHT-023_question_p033_2.png",
+    "question_image": "img_RECHT-023_question_p033_2.png",
     "answer_image": null,
     "q_y_min": 320452.67572021484,
     "q_y_max": 320640.43072509766,
@@ -3432,7 +3429,7 @@
       "maschinenfahrzeug",
       "weniger"
     ],
-    "question_image": "pictures/img_RECHT-049_question_p039_0.png",
+    "question_image": "img_RECHT-049_question_p039_0.png",
     "answer_image": null,
     "q_y_min": 380481.5357055664,
     "q_y_max": 380653.3907470703,
@@ -3453,7 +3450,7 @@
       "fischenden",
       "segelfahrzeugen"
     ],
-    "question_image": "pictures/img_RECHT-050_question_p040_0.png",
+    "question_image": null,
     "answer_image": null,
     "q_y_min": 390263.4356994629,
     "q_y_max": 390636.2307128906,
@@ -3474,7 +3471,7 @@
       "backbordseitenlicht",
       "eines"
     ],
-    "question_image": "pictures/img_RECHT-051_question_p040_0.png",
+    "question_image": "img_RECHT-051_question_p040_0.png",
     "answer_image": null,
     "q_y_min": 390263.4356994629,
     "q_y_max": 390435.2907104492,
@@ -3978,7 +3975,7 @@
       "abweichen",
       "fahrwasserverlauf"
     ],
-    "question_image": "pictures/img_RECHT-075_question_p046_1.png",
+    "question_image": null,
     "answer_image": null,
     "q_y_min": 440702.9956665039,
     "q_y_max": 450549.9506225586,
@@ -4019,7 +4016,7 @@
       "manövrierbehindertes",
       "fahrzeug"
     ],
-    "question_image": "pictures/img_RECHT-077_question_p046_0.png",
+    "question_image": "img_RECHT-077_question_p046_0.png",
     "answer_image": null,
     "q_y_min": 450207.8756866455,
     "q_y_max": 450243.2906341553,
@@ -4040,7 +4037,7 @@
       "übereinander",
       "entgegenkommendes"
     ],
-    "question_image": "pictures/img_RECHT-078_question_p046_1.png",
+    "question_image": "img_RECHT-078_question_p046_1.png",
     "answer_image": null,
     "q_y_min": 450501.9356994629,
     "q_y_max": 450562.55072021484,
@@ -4061,7 +4058,7 @@
       "nächste",
       "tonne"
     ],
-    "question_image": "pictures/img_RECHT-079_question_p047_0.png",
+    "question_image": null,
     "answer_image": null,
     "q_y_min": 460049.89558792114,
     "q_y_max": 460804.7106933594,
@@ -4124,7 +4121,7 @@
       "rundumlichter",
       "rotrotgrün"
     ],
-    "question_image": "pictures/img_RECHT-082_question_p047_0.png",
+    "question_image": "img_RECHT-082_question_p047_0.png",
     "answer_image": null,
     "q_y_min": 460525.39556884766,
     "q_y_max": 460654.17071533203,
@@ -5381,7 +5378,7 @@
       "umlaufender",
       "wind"
     ],
-    "question_image": "pictures/img_WET-033_question_p060_0.png",
+    "question_image": "img_WET-033_question_p060_0.png",
     "answer_image": null,
     "q_y_min": 590437.7357177734,
     "q_y_max": 600784.3707275391,
@@ -5401,7 +5398,7 @@
       "warmfront",
       "kaltfront"
     ],
-    "question_image": "pictures/img_WET-034_question_p061_0.png",
+    "question_image": "img_WET-034_question_p061_0.png",
     "answer_image": null,
     "q_y_min": 600098.7956695557,
     "q_y_max": 600109.010673523,
@@ -7602,8 +7599,8 @@
       "etwas",
       "scheinbare"
     ],
-    "question_image": "pictures/img_SEEM1-041_question_p083_0.png",
-    "answer_image": "pictures/img_SEEM1-041_answer_p083_1.png",
+    "question_image": "img_SEEM1-041_question_p083_0.png",
+    "answer_image": "img_SEEM1-041_answer_p083_1.png",
     "q_y_min": 820240.2757110596,
     "q_y_max": 820300.890625,
     "a_y_min": 820425.3621826172,
@@ -8372,8 +8369,8 @@
       "vorspring",
       "vorleine"
     ],
-    "question_image": "pictures/img_SEEM1-078_question_p091_0.png",
-    "answer_image": "pictures/img_SEEM1-078_answer_p091_0.png",
+    "question_image": "img_SEEM1-078_question_p091_0.png",
+    "answer_image": "img_SEEM1-078_answer_p091_0.png",
     "q_y_min": 900175.2356719971,
     "q_y_max": 900198.0506439209,
     "a_y_min": 900377.482208252,
@@ -8387,8 +8384,8 @@
     "question": "Wie können Sie mit Hilfe von zwei Fendern und einem Fenderbrett Ihr Boot festmachen, wenn die Pier mit vorspringenden Pfählen versehen ist? Ergänzen Sie die Skizze mit Leinen.",
     "answer": "",
     "keywords": [],
-    "question_image": "pictures/img_SEEM1-078_question_p091_0.png",
-    "answer_image": "pictures/img_SEEM1-079_answer_p092_0.png",
+    "question_image": "img_SEEM1-078_question_p091_0.png",
+    "answer_image": "img_SEEM1-079_answer_p092_0.png",
     "q_y_min": 900662.9757080078,
     "q_y_max": 910575.5706176758,
     "a_y_min": 910459.8021850586,
@@ -8904,8 +8901,8 @@
     "question": "Mit welchem Manöver können Sie bei Starkwind das Halsen vermeiden (Name)? Vervollständigen Sie die Skizze durch Einzeichnen der Kurslinie und geben Sie die erforderlichen Manöver an.",
     "answer": "",
     "keywords": [],
-    "question_image": "pictures/img_SEEM1-104_question_p097_0.png",
-    "answer_image": "pictures/img_SEEM1-104_answer_p097_0.png",
+    "question_image": "img_SEEM1-104_question_p097_0.png",
+    "answer_image": "img_SEEM1-104_answer_p097_0.png",
     "q_y_min": 960300.6357116699,
     "q_y_max": 960336.0506896973,
     "a_y_min": null,

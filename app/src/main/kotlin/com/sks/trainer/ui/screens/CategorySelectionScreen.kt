@@ -7,12 +7,15 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import com.sks.trainer.R
+import com.sks.trainer.data.QuestionRepository
 
 /**
  * Screen to select a category for learning or testing.
@@ -21,9 +24,12 @@ import com.sks.trainer.R
 @Composable
 fun CategorySelectionScreen(
     mode: String,
-    onCategorySelected: (String) -> Unit,
+    onCategorySelected: (String, Boolean) -> Unit,
     onBack: () -> Unit
 ) {
+    val context = LocalContext.current
+    val repository = remember { QuestionRepository(context) }
+
     val categories = listOf(
         stringResource(id = R.string.category_navigation),
         stringResource(id = R.string.category_recht),
@@ -36,10 +42,15 @@ fun CategorySelectionScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(if (mode == "lernen") "Lernen: Thema wählen" else "Test: Thema wählen") },
+                title = { 
+                    Text(
+                        if (mode == "lernen") stringResource(id = R.string.title_category_lernen) 
+                        else stringResource(id = R.string.title_category_test)
+                    ) 
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Zurück")
+                        Icon(Icons.Default.ArrowBack, contentDescription = stringResource(id = R.string.content_desc_back))
                     }
                 }
             )
@@ -50,28 +61,85 @@ fun CategorySelectionScreen(
                 .fillMaxSize()
                 .padding(padding)
                 .padding(16.dp),
-            verticalArrangement = Arrangement.spacedBy(16.dp)
+            verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
             items(categories) { category ->
-                Card(
-                    onClick = { onCategorySelected(category) },
-                    modifier = Modifier.fillMaxWidth(),
-                    // Wir nutzen jetzt die globale App-Themenfarbe für den Hintergrund:
-                    colors = CardDefaults.cardColors(
-                        containerColor = MaterialTheme.colorScheme.primary,
-                        contentColor = MaterialTheme.colorScheme.onPrimary
-                    ),
-                    elevation = CardDefaults.cardElevation(
-                        defaultElevation = 4.dp
-                    )
-                ) {
-                    Text(
-                        text = category,
-                        modifier = Modifier.padding(24.dp),
-                        style = MaterialTheme.typography.titleLarge,
-                        fontWeight = FontWeight.Bold
-                    )
-                }
+                CategorySection(
+                    category = category,
+                    allCount = repository.getQuestionCount(category),
+                    bookmarkCount = repository.getBookmarkCount(category),
+                    onSelectAll = { onCategorySelected(category, false) },
+                    onSelectBookmarks = { onCategorySelected(category, true) }
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun CategorySection(
+    category: String,
+    allCount: Int,
+    bookmarkCount: Int,
+    onSelectAll: () -> Unit,
+    onSelectBookmarks: () -> Unit
+) {
+    Column(modifier = Modifier.fillMaxWidth()) {
+        Text(
+            text = category,
+            style = MaterialTheme.typography.titleMedium,
+            fontWeight = FontWeight.Bold,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier.padding(bottom = 8.dp, start = 4.dp)
+        )
+        
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(IntrinsicSize.Min), // Stellt sicher, dass beide Buttons gleich hoch sind
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            // Button für Alle Fragen
+            Button(
+                onClick = onSelectAll,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .heightIn(min = 64.dp),
+                shape = MaterialTheme.shapes.medium,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                )
+            ) {
+                Text(
+                    text = stringResource(id = R.string.btn_all_questions, allCount),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
+                )
+            }
+
+            // Button für Gemerkte Fragen
+            Button(
+                onClick = onSelectBookmarks,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxHeight()
+                    .heightIn(min = 64.dp),
+                enabled = bookmarkCount > 0,
+                shape = MaterialTheme.shapes.medium,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = MaterialTheme.colorScheme.primary,
+                    contentColor = MaterialTheme.colorScheme.onPrimary
+                )
+            ) {
+                Text(
+                    text = stringResource(id = R.string.btn_bookmarked_questions, bookmarkCount),
+                    style = MaterialTheme.typography.labelLarge,
+                    fontWeight = FontWeight.Bold,
+                    textAlign = TextAlign.Center
+                )
             }
         }
     }

@@ -11,19 +11,21 @@ import com.sks.trainer.ui.screens.CategorySelectionScreen
 import com.sks.trainer.ui.screens.LearningScreen
 import com.sks.trainer.ui.screens.TestScreen
 import com.sks.trainer.ui.screens.StatsScreen
+import com.sks.trainer.ui.screens.LegalInfoScreen
 
 sealed class Screen(val route: String) {
     object Home : Screen("home")
     object CategorySelection : Screen("category_selection/{mode}") {
         fun createRoute(mode: String) = "category_selection/$mode"
     }
-    object Learning : Screen("learning/{category}") {
-        fun createRoute(category: String) = "learning/$category"
+    object Learning : Screen("learning/{category}/{bookmarksOnly}") {
+        fun createRoute(category: String, bookmarksOnly: Boolean) = "learning/$category/$bookmarksOnly"
     }
-    object Test : Screen("test/{category}") {
-        fun createRoute(category: String) = "test/$category"
+    object Test : Screen("test/{category}/{bookmarksOnly}") {
+        fun createRoute(category: String, bookmarksOnly: Boolean) = "test/$category/$bookmarksOnly"
     }
     object Stats : Screen("stats")
+    object LegalInfo : Screen("legal_info")
 }
 
 @Composable
@@ -41,6 +43,9 @@ fun AppNavigation() {
                 },
                 onNavigateToStats = {
                     navController.navigate(Screen.Stats.route)
+                },
+                onNavigateToLegalInfo = {
+                    navController.navigate(Screen.LegalInfo.route)
                 }
             )
         }
@@ -52,11 +57,11 @@ fun AppNavigation() {
             val mode = backStackEntry.arguments?.getString("mode") ?: "lernen"
             CategorySelectionScreen(
                 mode = mode,
-                onCategorySelected = { category ->
+                onCategorySelected = { category, bookmarksOnly ->
                     if (mode == "lernen") {
-                        navController.navigate(Screen.Learning.createRoute(category))
+                        navController.navigate(Screen.Learning.createRoute(category, bookmarksOnly))
                     } else {
-                        navController.navigate(Screen.Test.createRoute(category))
+                        navController.navigate(Screen.Test.createRoute(category, bookmarksOnly))
                     }
                 },
                 onBack = { navController.popBackStack() }
@@ -65,28 +70,42 @@ fun AppNavigation() {
 
         composable(
             route = Screen.Learning.route,
-            arguments = listOf(navArgument("category") { type = NavType.StringType })
+            arguments = listOf(
+                navArgument("category") { type = NavType.StringType },
+                navArgument("bookmarksOnly") { type = NavType.BoolType }
+            )
         ) { backStackEntry ->
             val category = backStackEntry.arguments?.getString("category") ?: ""
+            val bookmarksOnly = backStackEntry.arguments?.getBoolean("bookmarksOnly") ?: false
             LearningScreen(
                 category = category,
+                bookmarksOnly = bookmarksOnly,
                 onBack = { navController.popBackStack(Screen.Home.route, false) }
             )
         }
 
         composable(
             route = Screen.Test.route,
-            arguments = listOf(navArgument("category") { type = NavType.StringType })
+            arguments = listOf(
+                navArgument("category") { type = NavType.StringType },
+                navArgument("bookmarksOnly") { type = NavType.BoolType }
+            )
         ) { backStackEntry ->
             val category = backStackEntry.arguments?.getString("category") ?: ""
+            val bookmarksOnly = backStackEntry.arguments?.getBoolean("bookmarksOnly") ?: false
             TestScreen(
                 category = category,
+                bookmarksOnly = bookmarksOnly,
                 onBack = { navController.popBackStack(Screen.Home.route, false) }
             )
         }
 
         composable(Screen.Stats.route) {
             StatsScreen(onBack = { navController.popBackStack() })
+        }
+        
+        composable(Screen.LegalInfo.route) {
+            LegalInfoScreen(onBack = { navController.popBackStack() })
         }
     }
 }

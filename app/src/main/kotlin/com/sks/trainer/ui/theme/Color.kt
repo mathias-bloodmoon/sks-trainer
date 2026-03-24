@@ -12,6 +12,7 @@ val LightGray = Color(0xFFF5F5F5)
 
 // SKS Farben
 val SksBlue = Color(0xFF154B78)
+val SksBlueLight = Color(0xFF3A7FB5) // Noch etwas helleres Blau für die Antwortseite
 val SksYellow = Color(0xFFFFC846)
 
 // Neuer Hintergrund-Farbton

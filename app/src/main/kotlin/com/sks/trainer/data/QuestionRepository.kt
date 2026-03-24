@@ -3,7 +3,6 @@ package com.sks.trainer.data
 import android.content.Context
 import com.sks.trainer.model.SksQuestion
 import kotlinx.serialization.json.Json
-import kotlinx.serialization.decodeFromString
 
 /**
  * Repository to handle loading and filtering SKS questions from the local JSON asset.
@@ -11,6 +10,7 @@ import kotlinx.serialization.decodeFromString
 class QuestionRepository(private val context: Context) {
 
     private val json = Json { ignoreUnknownKeys = true }
+    private val statsManager = StatsManager(context)
 
     /**
      * Loads all questions from the assets/sks.json file.
@@ -26,21 +26,54 @@ class QuestionRepository(private val context: Context) {
     }
 
     /**
-     * Returns questions filtered by category.
+     * Returns questions filtered by category and optionally by bookmarks.
      */
-    fun getQuestionsByCategory(category: String): List<SksQuestion> {
-        return loadQuestions().filter { it.category.equals(category, ignoreCase = true) }
+    fun getQuestions(category: String, bookmarksOnly: Boolean = false): List<SksQuestion> {
+        val all = loadQuestions()
+        val filteredByCategory = if (category == "Zufällig") {
+            all
+        } else {
+            all.filter { it.category.equals(category, ignoreCase = true) }
+        }
+
+        return if (bookmarksOnly) {
+            val bookmarks = statsManager.getBookmarkedQuestionIds()
+            filteredByCategory.filter { it.id in bookmarks }
+        } else {
+            filteredByCategory
+        }
     }
 
     /**
-     * Returns 30 random questions from a specific category or from all categories.
+     * Returns the count of all questions in a category.
      */
-    fun getRandomQuestions(category: String? = null, count: Int = 30): List<SksQuestion> {
-        val all = if (category == null || category == "Zufällig") {
-            loadQuestions()
+    fun getQuestionCount(category: String): Int {
+        val all = loadQuestions()
+        return if (category == "Zufällig") {
+            all.size
         } else {
-            getQuestionsByCategory(category)
+            all.count { it.category.equals(category, ignoreCase = true) }
         }
-        return all.shuffled().take(count)
+    }
+
+    /**
+     * Returns the count of bookmarked questions in a category.
+     */
+    fun getBookmarkCount(category: String): Int {
+        val all = loadQuestions()
+        val bookmarks = statsManager.getBookmarkedQuestionIds()
+        return if (category == "Zufällig") {
+            all.count { it.id in bookmarks }
+        } else {
+            all.count { it.category.equals(category, ignoreCase = true) && it.id in bookmarks }
+        }
+    }
+
+    /**
+     * Returns random questions from a specific category or from all categories.
+     */
+    fun getRandomQuestions(category: String? = null, bookmarksOnly: Boolean = false, count: Int = 10): List<SksQuestion> {
+        val questions = getQuestions(category ?: "Zufällig", bookmarksOnly)
+        return questions.shuffled().take(count)
     }
 }

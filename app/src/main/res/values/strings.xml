@@ -10,15 +10,115 @@
     <string name="category_wetter">Wetterkunde</string>
     <string name="category_seemannschaft">Seemannschaft I</string>
     <string name="category_random">Zufällig</string>
+    <string name="category_bookmarks">Gemerkte Fragen</string>
+
+    <string name="btn_all_questions">Alle Fragen (%1$d)</string>
+    <string name="btn_bookmarked_questions">Gemerkte Fragen (%1$d)</string>
 
     <string name="btn_confirm">Bestätigen</string>
     <string name="btn_record_again">Antwort neu aufnehmen</string>
     <string name="btn_next">Weiter</string>
+    <string name="btn_next_question">Nächste</string>
+    <string name="btn_previous">Vorherige</string>
+    <string name="btn_finish">Abschließen</string>
     <string name="btn_back_home">Zurück zum Start</string>
 
     <string name="score_label">Ergebnis: %1$d%%</string>
-    <string name="test_finished">Test abgeschlossen</string>
-    <string name="correct_answers">Richtig beantwortet: %1$d von %2$d</string>
+    <string name="test_finished">Test Beendet</string>
+    <string name="correct_answers">Richtige Antworten: %1$d / %2$d</string>
 
     <string name="share_text">Lerne für deinen SKS mit dem SKS Trainer! Lade die App hier herunter: [PLAY_STORE_LINK]</string>
+
+    <string name="stats_global_title">Gesamtstatistik</string>
+    <string name="stats_details_title">Details nach Thema</string>
+    <string name="stats_reset_title">Statistik löschen</string>
+    <string name="stats_reset_message">Soll die Statistik für "%1$s" wirklich gelöscht werden?</string>
+    <string name="stats_reset_yes">Löschen</string>
+    <string name="stats_reset_no">Abbrechen</string>
+
+    <!-- UI Texte und Beschriftungen -->
+    <string name="content_desc_back">Zurück</string>
+    <string name="content_desc_speak">Sprechen</string>
+    <string name="content_desc_wrong">Falsch</string>
+    <string name="content_desc_correct">Richtig</string>
+    <string name="content_desc_bookmark">Frage merken</string>
+    <string name="content_desc_delete">Löschen</string>
+
+    <string name="title_category_lernen">Lernen: Thema wählen</string>
+    <string name="title_category_test">Test: Thema wählen</string>
+    <string name="title_test_category">Test: %1$s</string>
+
+    <string name="no_questions_found">Keine Fragen gefunden.</string>
+    <string name="no_bookmarks_found">Du hast noch keine Fragen gemerkt.</string>
+    <string name="question_progress">Frage %1$d von %2$d</string>
+
+    <string name="flashcard_question">FRAGE</string>
+    <string name="flashcard_answer">ANTWORT</string>
+
+    <string name="test_question_label">PRÜFUNGSFRAGE</string>
+    <string name="test_listening">ICH HÖRE ZU&#8230;</string>
+    <string name="test_your_answer">IHRE ANTWORT</string>
+    <string name="test_correct_answer">RICHTIGE ANTWORT</string>
+    <string name="test_release_to_stop">Loslassen zum Beenden</string>
+    <string name="test_hold_to_speak">Halten zum Sprechen</string>
+    <string name="test_evaluate_answer">Bewerte deine Antwort:</string>
+
+    <string name="stats_learning_interactions">Lern-Interaktionen:</string>
+    <string name="stats_tests_taken">Abgeschlossene Tests:</string>
+    <string name="stats_success_rate">Test-Erfolgsquote:</string>
+    <string name="stats_success_rate_value">%1$d%% (%2$d von %3$d richtig)</string>
+    <string name="stats_success_rate_short">Erfolgsquote:</string>
+    <string name="stats_success_rate_value_short">%1$d%% (%2$d von %3$d)</string>
+    <string name="stats_empty_message">Schließe einen Test oder Lernabschnitt ab, um die Details für die Themen freizuschalten.</string>
+
+    <!-- Rechtliche Texte -->
+    <string name="title_legal_info">Rechtliche Hinweise</string>
+    <string name="legal_imprint_title">Impressum &amp; Haftung</string>
+    <string name="legal_privacy_title">Datenschutz</string>
+    <string name="legal_licenses_title">Open-Source Lizenzen</string>
+    <string name="btn_close">Schließen</string>
+
+    <string name="legal_imprint_text">
+        <![CDATA[
+<b>Angaben gemäß § 5 TMG</b><br/><br/>
+Mathias Nagel<br/>
+Elsbeerring 10b<br/>
+37129 Bovenden<br/><br/>
+<b>Kontakt</b><br/>
+E-Mail: flash@flashbox.org<br/><br/>
+<b>Haftung für Inhalte</b><br/>
+Die Inhalte dieser App wurden mit größter Sorgfalt erstellt. Für die Richtigkeit, Vollständigkeit und Aktualität der Inhalte (insbesondere der SKS-Prüfungsfragen) können wir jedoch keine Gewähr übernehmen. Diese App dient ausschließlich Lern- und Übungszwecken und ersetzt keinesfalls die offiziellen Fragebögen oder amtlichen Lehrmaterialien zur Vorbereitung auf den Sportküstenschifferschein (SKS).<br/><br/>
+<b>Quellenangabe der Prüfungsfragen</b><br/>
+Die in dieser App verwendeten Prüfungsfragen und Antworten basieren auf dem amtlichen Fragenkatalog für den Sportküstenschifferschein (SKS).<br/>
+Quelle: Wasserstraßen- und Schifffahrtsverwaltung des Bundes (WSV) / ELWIS. Vervielfältigung und Verbreitung (auch auszugsweise) mit Quellenangabe gestattet.
+        ]]>
+    </string>
+
+    <string name="legal_privacy_text">
+        <![CDATA[
+<b>1. Datenschutz auf einen Blick</b><br/>
+Wir nehmen den Schutz Ihrer persönlichen Daten sehr ernst. Diese Datenschutzerklärung klärt Sie über die Art, den Umfang und den Zweck der Verarbeitung von personenbezogenen Daten innerhalb unserer App auf.<br/><br/>
+<b>2. Nutzung des Mikrofons</b><br/>
+Unsere App bietet eine Funktion zur Spracherkennung, um Antworten im Test-Modus aufzuzeichnen und auszuwerten. Hierfür wird die Berechtigung zur Nutzung des Mikrofons (RECORD_AUDIO) benötigt.<br/>
+- <b>Zweck:</b> Das Mikrofon wird ausschließlich genutzt, um Ihre gesprochenen Antworten in Text umzuwandeln.<br/>
+- <b>Speicherung &amp; Weitergabe:</b> Die Audiodaten werden <b>nicht</b> von uns gespeichert, nicht aufgezeichnet und nicht an Dritte weitergegeben. Die Spracherkennung erfolgt über die in das Android-Betriebssystem integrierten Dienste (Google Speech Recognition Service). Die Verarbeitung der Sprachdaten unterliegt den Datenschutzbestimmungen von Google.<br/><br/>
+<b>3. Lokale Speicherung von Statistiken</b><br/>
+Die App speichert Ihren Lern- und Testfortschritt (z.B. absolvierte Tests, richtige Antworten) lokal auf Ihrem Gerät. Diese Daten werden nicht an uns oder Dritte übermittelt.<br/><br/>
+<b>4. Kontakt</b><br/>
+Bei Fragen zum Datenschutz wenden Sie sich bitte an die im Impressum angegebene E-Mail-Adresse.
+        ]]>
+    </string>
+
+    <string name="legal_licenses_text">
+        <![CDATA[
+Diese App verwendet Open-Source-Software. Wir danken den Entwicklern der folgenden Bibliotheken:<br/><br/>
+- <b>Android Jetpack / AndroidX</b> (Apache License 2.0)<br/>
+- <b>Jetpack Compose</b> (Apache License 2.0)<br/>
+- <b>Kotlin Standard Library</b> (Apache License 2.0)<br/>
+- <b>Material Design Components</b> (Apache License 2.0)<br/><br/>
+Den vollständigen Text der Apache License 2.0 finden Sie unter:<br/>
+<a href="http://www.apache.org/licenses/LICENSE-2.0">http://www.apache.org/licenses/LICENSE-2.0</a>
+        ]]>
+    </string>
+
 </resources>

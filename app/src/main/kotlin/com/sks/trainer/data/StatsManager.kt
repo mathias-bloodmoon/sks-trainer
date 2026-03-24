@@ -1,17 +1,17 @@
+@file:OptIn(kotlinx.serialization.InternalSerializationApi::class)
 package com.sks.trainer.data
 
 import android.content.Context
 import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.encodeToString
-import kotlinx.serialization.decodeFromString
 import java.io.File
 
 /**
- * Data model for user statistics.
+ * Data model for statistics per category.
  */
 @Serializable
-data class UserStats(
+data class CategoryStats(
     val learningInteractions: Int = 0,
     val testsTaken: Int = 0,
     val correctAnswers: Int = 0,
@@ -19,11 +19,23 @@ data class UserStats(
 )
 
 /**
+ * Data model for global user statistics, including a map for category-specific stats.
+ */
+@Serializable
+data class UserStats(
+    val globalStats: CategoryStats = CategoryStats(),
+    val categoryStats: Map<String, CategoryStats> = emptyMap(),
+    val bookmarkedQuestionIds: Set<String> = emptySet()
+)
+
+/**
  * Manages saving and loading user statistics to a local JSON file.
  */
 class StatsManager(private val context: Context) {
-    private val fileName = "user_stats.json"
-    private val json = Json { prettyPrint = true }
+    // Neuer Dateiname, da sich die Struktur der JSON-Datei stark geändert hat
+    // So vermeiden wir Abstürze beim Einlesen alter, nicht kompatibler Speicherstände.
+    private val fileName = "user_stats_v2.json" 
+    private val json = Json { prettyPrint = true; ignoreUnknownKeys = true }
 
     /**
      * Loads stats from local file.
@@ -33,7 +45,7 @@ class StatsManager(private val context: Context) {
         return if (file.exists()) {
             try {
                 json.decodeFromString<UserStats>(file.readText())
-            } catch (e: Exception) {
+            } catch (_: Exception) {
                 UserStats()
             }
         } else {
@@ -47,26 +59,94 @@ class StatsManager(private val context: Context) {
     fun saveStats(stats: UserStats) {
         val file = File(context.filesDir, fileName)
         file.writeText(json.encodeToString(stats))
-        // TODO: Sync to online JSON in private section of repo as per requirement
     }
 
     /**
-     * Increments learning interaction count.
+     * Resets all statistics.
      */
-    fun incrementLearning() {
+    fun resetAllStats() {
         val current = loadStats()
-        saveStats(current.copy(learningInteractions = current.learningInteractions + 1))
+        saveStats(current.copy(globalStats = CategoryStats(), categoryStats = emptyMap()))
     }
 
     /**
-     * Records a test result.
+     * Resets statistics for a specific category.
      */
-    fun recordTestResult(correct: Int, total: Int) {
+    fun resetCategoryStats(category: String) {
         val current = loadStats()
-        saveStats(current.copy(
-            testsTaken = current.testsTaken + 1,
-            correctAnswers = current.correctAnswers + correct,
-            totalTestQuestions = current.totalTestQuestions + total
-        ))
+        val newMap = current.categoryStats.toMutableMap()
+        newMap.remove(category)
+        saveStats(current.copy(categoryStats = newMap))
+    }
+
+    /**
+     * Toggles the bookmark status of a question.
+     */
+    fun toggleBookmark(questionId: String) {
+        val current = loadStats()
+        val newBookmarks = if (current.bookmarkedQuestionIds.contains(questionId)) {
+            current.bookmarkedQuestionIds - questionId
+        } else {
+            current.bookmarkedQuestionIds + questionId
+        }
+        saveStats(current.copy(bookmarkedQuestionIds = newBookmarks))
+    }
+
+    /**
+     * Checks if a question is bookmarked.
+     */
+    fun isBookmarked(questionId: String): Boolean {
+        return loadStats().bookmarkedQuestionIds.contains(questionId)
+    }
+
+    /**
+     * Returns all bookmarked question IDs.
+     */
+    fun getBookmarkedQuestionIds(): Set<String> {
+        return loadStats().bookmarkedQuestionIds
+    }
+
+    /**
+     * Increments learning interaction count globally and for the specific category.
+     */
+    fun incrementLearning(category: String) {
+        val current = loadStats()
+        val catStats = current.categoryStats[category] ?: CategoryStats()
+        
+        val updatedGlobal = current.globalStats.copy(
+            learningInteractions = current.globalStats.learningInteractions + 1
+        )
+        val updatedCat = catStats.copy(
+            learningInteractions = catStats.learningInteractions + 1
+        )
+        
+        val newMap = current.categoryStats.toMutableMap()
+        newMap[category] = updatedCat
+        
+        saveStats(current.copy(globalStats = updatedGlobal, categoryStats = newMap))
+    }
+
+    /**
+     * Records a test result globally and for the specific category.
+     */
+    fun recordTestResult(category: String, correct: Int, total: Int) {
+        val current = loadStats()
+        val catStats = current.categoryStats[category] ?: CategoryStats()
+        
+        val updatedGlobal = current.globalStats.copy(
+            testsTaken = current.globalStats.testsTaken + 1,
+            correctAnswers = current.globalStats.correctAnswers + correct,
+            totalTestQuestions = current.globalStats.totalTestQuestions + total
+        )
+        val updatedCat = catStats.copy(
+            testsTaken = catStats.testsTaken + 1,
+            correctAnswers = catStats.correctAnswers + correct,
+            totalTestQuestions = catStats.totalTestQuestions + total
+        )
+        
+        val newMap = current.categoryStats.toMutableMap()
+        newMap[category] = updatedCat
+        
+        saveStats(current.copy(globalStats = updatedGlobal, categoryStats = newMap))
     }
 }

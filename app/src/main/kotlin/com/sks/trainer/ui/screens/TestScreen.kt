@@ -16,6 +16,8 @@ import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowBack
 import androidx.compose.material.icons.filled.Mic
+import androidx.compose.material.icons.filled.ThumbDown
+import androidx.compose.material.icons.filled.ThumbUp
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -31,20 +33,19 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
-import androidx.compose.ui.unit.sp
 import androidx.core.content.ContextCompat
 import com.sks.trainer.R
 import com.sks.trainer.data.QuestionRepository
 import com.sks.trainer.data.StatsManager
-import com.sks.trainer.model.SksQuestion
 import com.sks.trainer.util.SpeechRecognizerHelper
-import com.sks.trainer.util.TextSimilarity
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TestScreen(
     category: String,
+    bookmarksOnly: Boolean = false,
     onBack: () -> Unit
 ) {
     val context = LocalContext.current
@@ -53,15 +54,18 @@ fun TestScreen(
     val repository = remember { QuestionRepository(context) }
     val statsManager = remember { StatsManager(context) }
     
-    val questions = rememberSaveable(category) { repository.getRandomQuestions(category) }
+    val questions = rememberSaveable(category, bookmarksOnly) { 
+        repository.getRandomQuestions(category, bookmarksOnly) 
+    }
 
     var currentIndex by rememberSaveable { mutableIntStateOf(0) }
     var fullRecognizedText by rememberSaveable { mutableStateOf("") }
     var currentPartialText by rememberSaveable { mutableStateOf("") } 
-    var similarityScore by rememberSaveable { mutableStateOf<Int?>(null) }
     var isPressing by remember { mutableStateOf(false) } 
-    var showResults by rememberSaveable { mutableStateOf(false) }
     var correctCount by rememberSaveable { mutableIntStateOf(0) }
+    
+    var needsConfirmation by rememberSaveable { mutableStateOf(false) }
+    var needsEvaluation by rememberSaveable { mutableStateOf(false) }
     
     var rmsLevel by remember { mutableFloatStateOf(0f) }
 
@@ -86,17 +90,21 @@ fun TestScreen(
         )
     }
 
+    LaunchedEffect(recognizedText, isPressing) {
+        if (recognizedText.isNotBlank() && !isPressing && !needsEvaluation) {
+            needsConfirmation = true
+        } else if (recognizedText.isBlank()) {
+            needsConfirmation = false
+        }
+    }
+
     DisposableEffect(Unit) {
         onDispose { speechHelper.destroy() }
     }
 
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
-    ) { isGranted ->
-        if (!isGranted) { 
-            // Optionaler Toast / Hinweis
-        }
-    }
+    ) { _ -> }
 
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
     val pulseScale by infiniteTransition.animateFloat(
@@ -111,15 +119,24 @@ fun TestScreen(
     
     val volumeScale = (1f + (rmsLevel.coerceIn(0f, 10f) / 15f))
 
-    if (showResults) {
-        TestResultsScreen(correct = correctCount, total = questions.size, onClose = onBack)
+    if (questions.isEmpty()) {
+        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+            Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                Text(
+                    text = if (bookmarksOnly) stringResource(id = R.string.no_bookmarks_found) else stringResource(id = R.string.no_questions_found),
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.padding(16.dp)
+                )
+                Button(onClick = onBack) {
+                    Text(stringResource(id = R.string.btn_back_home))
+                }
+            }
+        }
         return
     }
 
-    if (questions.isEmpty()) {
-        Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-            Text("Keine Fragen gefunden.")
-        }
+    if (currentIndex >= questions.size) {
+        TestResultsScreen(correct = correctCount, total = questions.size, onClose = onBack)
         return
     }
 
@@ -128,18 +145,51 @@ fun TestScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text("Test: $category") },
+                title = { 
+                    Column(modifier = Modifier.fillMaxWidth()) {
+                        val title = stringResource(id = R.string.title_test_category, category)
+                        
+                        Text(
+                            text = title,
+                            style = MaterialTheme.typography.titleMedium,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        
+                        if (bookmarksOnly) {
+                            Text(
+                                text = stringResource(id = R.string.category_bookmarks),
+                                style = MaterialTheme.typography.labelMedium,
+                                color = MaterialTheme.colorScheme.primary,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                    }
+                },
                 navigationIcon = {
                     IconButton(onClick = onBack) {
-                        Icon(Icons.Default.ArrowBack, contentDescription = "Zurück")
+                        Icon(Icons.Default.ArrowBack, contentDescription = stringResource(id = R.string.content_desc_back))
                     }
                 },
                 actions = {
-                    Text(
-                        text = "${currentIndex + 1}/${questions.size}",
-                        modifier = Modifier.padding(end = 16.dp),
-                        style = MaterialTheme.typography.bodyLarge
-                    )
+                    Box(
+                        modifier = Modifier
+                            .background(
+                                color = Color(0xFFF0F0F0),
+                                shape = MaterialTheme.shapes.small
+                            )
+                            .padding(horizontal = 8.dp, vertical = 4.dp)
+                            .align(Alignment.CenterVertically)
+                    ) {
+                        Text(
+                            text = "${currentIndex + 1} / ${questions.size}",
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            fontWeight = FontWeight.Bold
+                        )
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
                 }
             )
         }
@@ -151,7 +201,6 @@ fun TestScreen(
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            // GEMEINSAMER SCROLL-BEREICH FÜR ALLES
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -159,8 +208,6 @@ fun TestScreen(
                     .verticalScroll(rememberScrollState()),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                
-                // 1. KARTEN-BOX: PRÜFUNGSFRAGE
                 OutlinedCard(
                     modifier = Modifier.fillMaxWidth(),
                     shape = MaterialTheme.shapes.medium,
@@ -179,23 +226,32 @@ fun TestScreen(
                     ) {
                         Column(horizontalAlignment = Alignment.CenterHorizontally) {
                             Text(
-                                text = "PRÜFUNGSFRAGE",
+                                text = stringResource(id = R.string.test_question_label),
                                 style = MaterialTheme.typography.labelMedium,
                                 color = MaterialTheme.colorScheme.primary,
                                 fontWeight = FontWeight.Bold
                             )
                             Spacer(modifier = Modifier.height(16.dp))
                             
+                            if (currentQuestion.questionImage != null) {
+                                AssetImage(
+                                    fileName = currentQuestion.questionImage,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .heightIn(max = 180.dp)
+                                        .padding(bottom = 16.dp)
+                                )
+                            }
+
                             Text(
                                 text = currentQuestion.question,
-                                style = MaterialTheme.typography.headlineSmall, // Zentrale Font Size
+                                style = MaterialTheme.typography.headlineSmall, 
                                 textAlign = TextAlign.Center
                             )
                         }
                     }
                 }
 
-                // 2. KARTEN-BOX: IHRE ANTWORT
                 if (isPressing || recognizedText.isNotEmpty()) {
                     Spacer(modifier = Modifier.height(24.dp))
                     OutlinedCard(
@@ -216,7 +272,7 @@ fun TestScreen(
                         ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text(
-                                    text = if (isPressing && recognizedText.isEmpty()) "ICH HÖRE ZU..." else "IHRE ANTWORT",
+                                    text = if (isPressing && recognizedText.isEmpty()) stringResource(id = R.string.test_listening) else stringResource(id = R.string.test_your_answer),
                                     style = MaterialTheme.typography.labelMedium,
                                     color = MaterialTheme.colorScheme.primary,
                                     fontWeight = FontWeight.Bold
@@ -225,7 +281,6 @@ fun TestScreen(
                                 
                                 Text(
                                     text = recognizedText,
-                                    // SELBE FONT SIZE WIE DIE PRÜFUNGSFRAGE
                                     style = MaterialTheme.typography.headlineSmall, 
                                     textAlign = TextAlign.Center
                                 )
@@ -234,8 +289,7 @@ fun TestScreen(
                     }
                 }
 
-                // 3. KARTEN-BOX: RICHTIGE ANTWORT
-                if (similarityScore != null) {
+                if (needsEvaluation) {
                     Spacer(modifier = Modifier.height(24.dp))
                     OutlinedCard(
                         modifier = Modifier.fillMaxWidth(),
@@ -255,16 +309,25 @@ fun TestScreen(
                         ) {
                             Column(horizontalAlignment = Alignment.CenterHorizontally) {
                                 Text(
-                                    text = "RICHTIGE ANTWORT",
+                                    text = stringResource(id = R.string.test_correct_answer),
                                     style = MaterialTheme.typography.labelMedium,
                                     color = MaterialTheme.colorScheme.primary,
                                     fontWeight = FontWeight.Bold
                                 )
                                 Spacer(modifier = Modifier.height(16.dp))
                                 
+                                if (currentQuestion.answerImage != null) {
+                                    AssetImage(
+                                        fileName = currentQuestion.answerImage,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .heightIn(max = 180.dp)
+                                            .padding(bottom = 16.dp)
+                                    )
+                                }
+
                                 Text(
                                     text = currentQuestion.answer,
-                                    // SELBE FONT SIZE WIE DIE PRÜFUNGSFRAGE
                                     style = MaterialTheme.typography.headlineSmall, 
                                     textAlign = TextAlign.Center
                                 )
@@ -273,26 +336,21 @@ fun TestScreen(
                     }
                 }
                 
-                // Etwas Platz am Ende des scrollbaren Bereichs, damit es nicht direkt am Button klebt
                 Spacer(modifier = Modifier.height(16.dp))
             } 
 
-            // FESTER BEREICH UNTEN: Mic Button links, Text darunter. Bestätigen/Nächste Button rechts.
             Row(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(top = 8.dp),
                 verticalAlignment = Alignment.CenterVertically,
-                horizontalArrangement = Arrangement.SpaceBetween // Schiebt das Mic nach links und den Button nach rechts
+                horizontalArrangement = Arrangement.SpaceBetween
             ) {
-                // Linke Seite: Entweder Mikrofon oder das kalkulierte Ergebnis
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center,
-                    modifier = Modifier.weight(0.4f) // Nimmt etwa 40% des Platzes unten ein
-                ) {
-                    if (similarityScore == null) {
-                        // Noch nicht bestätigt -> Zeige Mikrofon
+                if (!needsEvaluation) {
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        modifier = Modifier.weight(0.4f) 
+                    ) {
                         Box(
                             contentAlignment = Alignment.Center,
                             modifier = Modifier
@@ -308,12 +366,9 @@ fun TestScreen(
 
                                             if (hasPermission) {
                                                 isPressing = true
-                                                if (similarityScore != null) {
-                                                    // Wenn bereits eine Punktzahl existiert, starten wir eine neue Antwort für dieselbe Frage
-                                                    similarityScore = null 
-                                                }
                                                 fullRecognizedText = ""
                                                 currentPartialText = ""
+                                                needsConfirmation = false
                                                 haptic.performHapticFeedback(HapticFeedbackType.LongPress)
                                                 speechHelper.startListening()
 
@@ -349,77 +404,101 @@ fun TestScreen(
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.Mic,
-                                    contentDescription = "Sprechen",
+                                    contentDescription = stringResource(id = R.string.content_desc_speak),
                                     tint = Color.White,
                                     modifier = Modifier.size(28.dp)
                                 )
                             }
                         }
                         
-                        // Text unterhalb des Mikrofons
                         Spacer(modifier = Modifier.height(4.dp))
                         Text(
-                            text = if (isPressing) "Loslassen zum Beenden" else "Halten zum Sprechen",
+                            text = if (isPressing) stringResource(id = R.string.test_release_to_stop) else stringResource(id = R.string.test_hold_to_speak),
                             style = MaterialTheme.typography.labelSmall,
                             color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
                             textAlign = TextAlign.Center
                         )
-                    } else {
-                        // Wurde bestätigt -> Zeige Ergebnis anstelle des Mikrofons an
-                        Text(
-                            text = stringResource(id = R.string.score_label, similarityScore!!),
-                            style = MaterialTheme.typography.titleLarge,
-                            // Die Farbcodierung wurde entfernt, der Text ist nun immer schwarz
-                            color = MaterialTheme.colorScheme.onBackground,
-                            fontWeight = FontWeight.Bold,
-                            textAlign = TextAlign.Center
-                        )
                     }
-                }
 
-                // Rechte Seite: Bestätigen oder Nächste-Button
-                Box(
-                    modifier = Modifier.weight(0.6f), // Nimmt die restlichen 60% des Platzes ein
-                    contentAlignment = Alignment.CenterEnd // Richtet den Button rechts aus
-                ) {
-                    if (similarityScore == null) {
-                        // Zeige den Bestätigen-Button an, sobald man gesprochen hat
+                    Box(
+                        modifier = Modifier.weight(0.6f), 
+                        contentAlignment = Alignment.CenterEnd 
+                    ) {
                         Button(
                             onClick = {
-                                val score = TextSimilarity.calculateSimilarity(recognizedText, currentQuestion.answer)
-                                similarityScore = score
-                                if (score >= 70) correctCount++
+                                needsEvaluation = true
                             },
-                            enabled = recognizedText.isNotEmpty() && !isPressing,
-                            shape = MaterialTheme.shapes.medium,
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(start = 16.dp)
-                                .height(56.dp) // Button etwas höher machen für bessere Bedienbarkeit
-                        ) {
-                            Text(stringResource(id = R.string.btn_confirm), fontWeight = FontWeight.Bold)
-                        }
-                    } else {
-                        // Zeige den Nächste-Button an, wenn die Auswertung da ist
-                        Button(
-                            onClick = {
-                                if (currentIndex < questions.size - 1) {
-                                    currentIndex++
-                                    fullRecognizedText = ""
-                                    currentPartialText = ""
-                                    similarityScore = null
-                                } else {
-                                    statsManager.recordTestResult(correctCount, questions.size)
-                                    showResults = true
-                                }
-                            },
+                            enabled = needsConfirmation,
                             shape = MaterialTheme.shapes.medium,
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .padding(start = 16.dp)
                                 .height(56.dp)
                         ) {
-                            Text(stringResource(id = R.string.btn_next), fontWeight = FontWeight.Bold)
+                            Text(stringResource(id = R.string.btn_confirm), fontWeight = FontWeight.Bold)
+                        }
+                    }
+                } else {
+                    Column(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalAlignment = Alignment.CenterHorizontally
+                    ) {
+                        Text(
+                            text = stringResource(id = R.string.test_evaluate_answer),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.onBackground.copy(alpha = 0.6f),
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            Button(
+                                onClick = {
+                                    if (currentIndex < questions.size - 1) {
+                                        currentIndex++
+                                        fullRecognizedText = ""
+                                        needsConfirmation = false
+                                        needsEvaluation = false
+                                    } else {
+                                        statsManager.recordTestResult(category, correctCount, questions.size)
+                                        currentIndex++ // Trigger the end screen
+                                    }
+                                },
+                                shape = MaterialTheme.shapes.medium,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(56.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = MaterialTheme.colorScheme.error
+                                )
+                            ) {
+                                Icon(Icons.Default.ThumbDown, contentDescription = stringResource(id = R.string.content_desc_wrong), tint = Color.White)
+                            }
+
+                            Button(
+                                onClick = {
+                                    correctCount++
+                                    if (currentIndex < questions.size - 1) {
+                                        currentIndex++
+                                        fullRecognizedText = ""
+                                        needsConfirmation = false
+                                        needsEvaluation = false
+                                    } else {
+                                        statsManager.recordTestResult(category, correctCount, questions.size)
+                                        currentIndex++ // Trigger the end screen
+                                    }
+                                },
+                                shape = MaterialTheme.shapes.medium,
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .height(56.dp),
+                                colors = ButtonDefaults.buttonColors(
+                                    containerColor = Color(0xFF4CAF50)
+                                )
+                            ) {
+                                Icon(Icons.Default.ThumbUp, contentDescription = stringResource(id = R.string.content_desc_correct), tint = Color.White)
+                            }
                         }
                     }
                 }
@@ -435,10 +514,10 @@ fun TestResultsScreen(correct: Int, total: Int, onClose: () -> Unit) {
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
     ) {
-        Text(text = "Test Beendet", style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
+        Text(text = stringResource(id = R.string.test_finished), style = MaterialTheme.typography.headlineMedium, fontWeight = FontWeight.Bold)
         Spacer(modifier = Modifier.height(16.dp))
-        Text(text = "Richtige Antworten: $correct / $total", style = MaterialTheme.typography.titleLarge)
-        val percent = (correct.toDouble() / total * 100).toInt()
+        Text(text = stringResource(id = R.string.correct_answers, correct, total), style = MaterialTheme.typography.titleLarge)
+        val percent = if (total > 0) (correct.toDouble() / total * 100).toInt() else 0
         Text(text = "$percent%", style = MaterialTheme.typography.displayLarge, color = MaterialTheme.colorScheme.primary, fontWeight = FontWeight.Black)
         Spacer(modifier = Modifier.height(48.dp))
         Button(
@@ -446,7 +525,7 @@ fun TestResultsScreen(correct: Int, total: Int, onClose: () -> Unit) {
             shape = MaterialTheme.shapes.medium,
             modifier = Modifier.fillMaxWidth().height(48.dp)
         ) {
-            Text("Zurück zum Start", fontWeight = FontWeight.Bold)
+            Text(stringResource(id = R.string.btn_back_home), fontWeight = FontWeight.Bold)
         }
     }
 }
