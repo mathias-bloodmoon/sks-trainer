@@ -27,7 +27,7 @@
     <string name="test_finished">Test Beendet</string>
     <string name="correct_answers">Richtige Antworten: %1$d / %2$d</string>
 
-    <string name="share_text">Lerne für deinen SKS mit dem SKS Trainer! Lade die App hier herunter: [PLAY_STORE_LINK]</string>
+    <string name="share_text">Lerne für deinen SKS mit dem SKS Trainer! Lade die App hier herunter: https://github.com/mathias-bloodmoon/sks-trainer</string>
 
     <string name="stats_global_title">Gesamtstatistik</string>
     <string name="stats_details_title">Details nach Thema</string>
@@ -62,6 +62,13 @@
     <string name="test_release_to_stop">Loslassen zum Beenden</string>
     <string name="test_hold_to_speak">Halten zum Sprechen</string>
     <string name="test_evaluate_answer">Bewerte deine Antwort:</string>
+
+    <string name="test_abort_title">Test abbrechen?</string>
+    <string name="test_abort_message">Bist du sicher, dass du den Test abbrechen möchtest? Dein bisheriger Fortschritt geht verloren.</string>
+    <string name="test_abort_yes">Abbrechen</string>
+    <string name="test_abort_no">Weiter testen</string>
+
+    <string name="error_mic_permission_denied">Mikrofon-Zugriff verweigert. Bitte in den App-Einstellungen aktivieren.</string>
 
     <string name="stats_learning_interactions">Lern-Interaktionen:</string>
     <string name="stats_tests_taken">Abgeschlossene Tests:</string>

@@ -2,6 +2,7 @@ package com.sks.trainer.ui.screens
 
 import android.Manifest
 import android.content.pm.PackageManager
+import androidx.activity.compose.BackHandler
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.animation.core.*
@@ -40,22 +41,35 @@ import com.sks.trainer.R
 import com.sks.trainer.data.QuestionRepository
 import com.sks.trainer.data.StatsManager
 import com.sks.trainer.util.SpeechRecognizerHelper
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.delay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TestScreen(
     category: String,
     bookmarksOnly: Boolean = false,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onTestFinished: () -> Unit
 ) {
     val context = LocalContext.current
     val haptic = LocalHapticFeedback.current
+    val snackbarHostState = remember { SnackbarHostState() }
+    val coroutineScope = rememberCoroutineScope()
     
     val repository = remember { QuestionRepository(context) }
     val statsManager = remember { StatsManager(context) }
     
-    val questions = rememberSaveable(category, bookmarksOnly) { 
-        repository.getRandomQuestions(category, bookmarksOnly) 
+    val allQuestions = remember(category, bookmarksOnly) { 
+        repository.getQuestions(category, bookmarksOnly) 
+    }
+    
+    val questionIds = rememberSaveable(category, bookmarksOnly) {
+        allQuestions.shuffled().take(10).map { it.id }
+    }
+    
+    val questions = remember(questionIds) {
+        questionIds.mapNotNull { id -> allQuestions.find { it.id == id } }
     }
 
     var currentIndex by rememberSaveable { mutableIntStateOf(0) }
@@ -66,6 +80,7 @@ fun TestScreen(
     
     var needsConfirmation by rememberSaveable { mutableStateOf(false) }
     var needsEvaluation by rememberSaveable { mutableStateOf(false) }
+    var showAbortDialog by remember { mutableStateOf(false) }
     
     var rmsLevel by remember { mutableFloatStateOf(0f) }
 
@@ -90,6 +105,22 @@ fun TestScreen(
         )
     }
 
+    val scrollState = rememberScrollState()
+
+    // Scrolle nach ganz oben, wenn eine neue Frage geladen wird
+    LaunchedEffect(currentIndex) {
+        scrollState.scrollTo(0)
+    }
+
+    // Scrolle nach ganz unten, solange Text vorhanden ist, eine Aufnahme läuft
+    // ODER eine Evaluation angezeigt wird. So bleibt der Screen stabil unten.
+    LaunchedEffect(isPressing, recognizedText.length, needsEvaluation) {
+        if (isPressing || recognizedText.isNotEmpty() || needsEvaluation) {
+            delay(50)
+            scrollState.animateScrollTo(scrollState.maxValue)
+        }
+    }
+
     LaunchedEffect(recognizedText, isPressing) {
         if (recognizedText.isNotBlank() && !isPressing && !needsEvaluation) {
             needsConfirmation = true
@@ -102,9 +133,19 @@ fun TestScreen(
         onDispose { speechHelper.destroy() }
     }
 
+    val micDeniedMessage = stringResource(id = R.string.error_mic_permission_denied)
     val permissionLauncher = rememberLauncherForActivityResult(
         ActivityResultContracts.RequestPermission()
-    ) { _ -> }
+    ) { isGranted -> 
+        if (!isGranted) {
+            coroutineScope.launch {
+                snackbarHostState.showSnackbar(
+                    message = micDeniedMessage,
+                    duration = SnackbarDuration.Short
+                )
+            }
+        }
+    }
 
     val infiniteTransition = rememberInfiniteTransition(label = "pulse")
     val pulseScale by infiniteTransition.animateFloat(
@@ -118,6 +159,34 @@ fun TestScreen(
     )
     
     val volumeScale = (1f + (rmsLevel.coerceIn(0f, 10f) / 15f))
+
+    BackHandler(enabled = currentIndex < questions.size) {
+        showAbortDialog = true
+    }
+
+    if (showAbortDialog) {
+        AlertDialog(
+            onDismissRequest = { showAbortDialog = false },
+            title = { Text(stringResource(id = R.string.test_abort_title)) },
+            text = { Text(stringResource(id = R.string.test_abort_message)) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showAbortDialog = false
+                        onBack()
+                    },
+                    colors = ButtonDefaults.textButtonColors(contentColor = MaterialTheme.colorScheme.error)
+                ) {
+                    Text(stringResource(id = R.string.test_abort_yes))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showAbortDialog = false }) {
+                    Text(stringResource(id = R.string.test_abort_no))
+                }
+            }
+        )
+    }
 
     if (questions.isEmpty()) {
         Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
@@ -136,13 +205,14 @@ fun TestScreen(
     }
 
     if (currentIndex >= questions.size) {
-        TestResultsScreen(correct = correctCount, total = questions.size, onClose = onBack)
+        TestResultsScreen(correct = correctCount, total = questions.size, onClose = onTestFinished)
         return
     }
 
     val currentQuestion = questions[currentIndex]
 
     Scaffold(
+        snackbarHost = { SnackbarHost(snackbarHostState) },
         topBar = {
             TopAppBar(
                 title = { 
@@ -168,7 +238,7 @@ fun TestScreen(
                     }
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    IconButton(onClick = { showAbortDialog = true }) {
                         Icon(Icons.Default.ArrowBack, contentDescription = stringResource(id = R.string.content_desc_back))
                     }
                 },
@@ -205,7 +275,7 @@ fun TestScreen(
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
-                    .verticalScroll(rememberScrollState()),
+                    .verticalScroll(scrollState),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 OutlinedCard(
@@ -237,8 +307,9 @@ fun TestScreen(
                                 AssetImage(
                                     fileName = currentQuestion.questionImage,
                                     modifier = Modifier
+                                        .widthIn(max = 360.dp)
                                         .fillMaxWidth()
-                                        .heightIn(max = 180.dp)
+                                        .heightIn(max = 360.dp)
                                         .padding(bottom = 16.dp)
                                 )
                             }
@@ -320,8 +391,9 @@ fun TestScreen(
                                     AssetImage(
                                         fileName = currentQuestion.answerImage,
                                         modifier = Modifier
+                                            .widthIn(max = 360.dp)
                                             .fillMaxWidth()
-                                            .heightIn(max = 180.dp)
+                                            .heightIn(max = 360.dp)
                                             .padding(bottom = 16.dp)
                                     )
                                 }
@@ -458,6 +530,7 @@ fun TestScreen(
                                     if (currentIndex < questions.size - 1) {
                                         currentIndex++
                                         fullRecognizedText = ""
+                                        currentPartialText = ""
                                         needsConfirmation = false
                                         needsEvaluation = false
                                     } else {
@@ -482,6 +555,7 @@ fun TestScreen(
                                     if (currentIndex < questions.size - 1) {
                                         currentIndex++
                                         fullRecognizedText = ""
+                                        currentPartialText = ""
                                         needsConfirmation = false
                                         needsEvaluation = false
                                     } else {

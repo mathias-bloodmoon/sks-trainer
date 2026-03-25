@@ -9,6 +9,11 @@ import kotlinx.serialization.json.Json
  */
 class QuestionRepository(private val context: Context) {
 
+    companion object {
+        // Caching der Fragen im Arbeitsspeicher, um ständiges JSON-Parsen (Disk I/O) zu vermeiden.
+        private var cachedQuestions: List<SksQuestion>? = null
+    }
+
     private val json = Json { ignoreUnknownKeys = true }
     private val statsManager = StatsManager(context)
 
@@ -16,9 +21,13 @@ class QuestionRepository(private val context: Context) {
      * Loads all questions from the assets/sks.json file.
      */
     fun loadQuestions(): List<SksQuestion> {
+        cachedQuestions?.let { return it }
+        
         return try {
             val jsonString = context.assets.open("sks.json").bufferedReader().use { it.readText() }
-            json.decodeFromString<List<SksQuestion>>(jsonString)
+            val parsedList = json.decodeFromString<List<SksQuestion>>(jsonString)
+            cachedQuestions = parsedList
+            parsedList
         } catch (e: Exception) {
             e.printStackTrace()
             emptyList()

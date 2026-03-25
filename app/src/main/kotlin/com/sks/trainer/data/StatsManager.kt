@@ -6,6 +6,7 @@ import kotlinx.serialization.Serializable
 import kotlinx.serialization.json.Json
 import kotlinx.serialization.encodeToString
 import java.io.File
+import kotlin.concurrent.thread
 
 /**
  * Data model for statistics per category.
@@ -32,17 +33,23 @@ data class UserStats(
  * Manages saving and loading user statistics to a local JSON file.
  */
 class StatsManager(private val context: Context) {
-    // Neuer Dateiname, da sich die Struktur der JSON-Datei stark geändert hat
-    // So vermeiden wir Abstürze beim Einlesen alter, nicht kompatibler Speicherstände.
+    
+    companion object {
+        // In-Memory Cache für die Statistiken, um UI-Ruckeln beim Disk I/O zu vermeiden.
+        private var cachedStats: UserStats? = null
+    }
+
     private val fileName = "user_stats_v2.json" 
     private val json = Json { prettyPrint = true; ignoreUnknownKeys = true }
 
     /**
-     * Loads stats from local file.
+     * Loads stats from local file (or memory cache).
      */
     fun loadStats(): UserStats {
+        cachedStats?.let { return it }
+
         val file = File(context.filesDir, fileName)
-        return if (file.exists()) {
+        val loaded = if (file.exists()) {
             try {
                 json.decodeFromString<UserStats>(file.readText())
             } catch (_: Exception) {
@@ -51,14 +58,26 @@ class StatsManager(private val context: Context) {
         } else {
             UserStats()
         }
+        
+        cachedStats = loaded
+        return loaded
     }
 
     /**
-     * Saves stats to local file.
+     * Saves stats to local file asynchronously.
      */
     fun saveStats(stats: UserStats) {
-        val file = File(context.filesDir, fileName)
-        file.writeText(json.encodeToString(stats))
+        cachedStats = stats
+        
+        // Dateioperation asynchron ausführen, damit der Main-Thread (UI) nicht blockiert wird
+        thread(start = true) {
+            try {
+                val file = File(context.filesDir, fileName)
+                file.writeText(json.encodeToString(stats))
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+        }
     }
 
     /**

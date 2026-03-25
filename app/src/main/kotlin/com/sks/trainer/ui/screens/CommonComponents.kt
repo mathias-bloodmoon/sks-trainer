@@ -31,7 +31,7 @@ fun AssetImage(fileName: String, modifier: Modifier = Modifier) {
             bitmap = it.asImageBitmap(),
             contentDescription = null,
             modifier = modifier,
-            contentScale = ContentScale.Fit
+            contentScale = ContentScale.FillWidth
         )
     }
 }

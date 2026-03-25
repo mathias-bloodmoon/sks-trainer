@@ -264,7 +264,7 @@ fun Flashcard(
                                 fileName = question.questionImage,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .heightIn(max = 200.dp)
+                                    .heightIn(max = 360.dp) // Von 200.dp auf 360.dp verdoppelt
                                     .padding(bottom = 16.dp)
                             )
                         }
@@ -290,7 +290,7 @@ fun Flashcard(
                                 fileName = question.answerImage,
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .heightIn(max = 200.dp)
+                                    .heightIn(max = 360.dp) // Von 200.dp auf 360.dp verdoppelt
                                     .padding(bottom = 16.dp)
                             )
                         }

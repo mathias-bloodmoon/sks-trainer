@@ -80,7 +80,9 @@ fun AppNavigation() {
             LearningScreen(
                 category = category,
                 bookmarksOnly = bookmarksOnly,
-                onBack = { navController.popBackStack(Screen.Home.route, false) }
+                // Vorher: popBackStack(Screen.Home.route, false) -> Sprang immer direkt auf den Home-Screen
+                // Neu: Nur popBackStack() -> Geht exakt einen Schritt zurück (zur Kategorie-Auswahl)
+                onBack = { navController.popBackStack() }
             )
         }
 
@@ -96,7 +98,11 @@ fun AppNavigation() {
             TestScreen(
                 category = category,
                 bookmarksOnly = bookmarksOnly,
-                onBack = { navController.popBackStack(Screen.Home.route, false) }
+                // Vorher: popBackStack(Screen.Home.route, false) -> Sprang immer direkt auf den Home-Screen
+                // Neu: Nur popBackStack() -> Geht exakt einen Schritt zurück (zur Kategorie-Auswahl)
+                onBack = { navController.popBackStack() },
+                // Eine zusätzliche Callback-Option nur für das erfolgreiche *Beenden* des Tests
+                onTestFinished = { navController.popBackStack(Screen.Home.route, false) }
             )
         }
 
