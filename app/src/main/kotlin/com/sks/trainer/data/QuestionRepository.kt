@@ -77,12 +77,4 @@ class QuestionRepository(private val context: Context) {
             all.count { it.category.equals(category, ignoreCase = true) && it.id in bookmarks }
         }
     }
-
-    /**
-     * Returns random questions from a specific category or from all categories.
-     */
-    fun getRandomQuestions(category: String? = null, bookmarksOnly: Boolean = false, count: Int = 10): List<SksQuestion> {
-        val questions = getQuestions(category ?: "Zufällig", bookmarksOnly)
-        return questions.shuffled().take(count)
-    }
 }

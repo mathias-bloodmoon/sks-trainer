@@ -47,6 +47,11 @@ android {
             excludes += "/META-INF/{AL2.0,LGPL2.1}"
         }
     }
+    lint {
+        // Workaround für einen bekannten Bug im Android Lint Tool,
+        // das bei MutableState in Compose-Listen abstürzt.
+        disable += "MutableCollectionMutableState"
+    }
 }
 
 dependencies {
