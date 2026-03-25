@@ -37,6 +37,6 @@ Der **SKS Trainer** ist eine moderne Android-Lern-App, die speziell zur Vorberei
 *   Die App basiert auf dem amtlichen Fragenkatalog für den Sportküstenschifferschein (SKS) der Wasserstraßen- und Schifffahrtsverwaltung des Bundes (WSV) / ELWIS.
 *   Die App dient ausschließlich Übungszwecken und ersetzt keine amtlichen Lehrmaterialien.
 *   Es werden **keine** Sprach- oder Nutzerdaten an Dritte gesendet. Die Spracherkennung erfolgt über die systeminternen Dienste.
-
+*   Datenschutzerklärung: https://mathias-bloodmoon.github.io/sks-trainer/privacy_policy.html
 ---
 *Entwickelt mit Jetpack Compose und viel Liebe zum Segelsport.*
