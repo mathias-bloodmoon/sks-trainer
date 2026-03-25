@@ -16,14 +16,11 @@
     <string name="btn_bookmarked_questions">Gemerkte Fragen (%1$d)</string>
 
     <string name="btn_confirm">Bestätigen</string>
-    <string name="btn_record_again">Antwort neu aufnehmen</string>
-    <string name="btn_next">Weiter</string>
     <string name="btn_next_question">Nächste</string>
     <string name="btn_previous">Vorherige</string>
     <string name="btn_finish">Abschließen</string>
     <string name="btn_back_home">Zurück zum Start</string>
 
-    <string name="score_label">Ergebnis: %1$d%%</string>
     <string name="test_finished">Test Beendet</string>
     <string name="correct_answers">Richtige Antworten: %1$d / %2$d</string>
 
@@ -83,7 +80,6 @@
     <string name="legal_imprint_title">Impressum &amp; Haftung</string>
     <string name="legal_privacy_title">Datenschutz</string>
     <string name="legal_licenses_title">Open-Source Lizenzen</string>
-    <string name="btn_close">Schließen</string>
 
     <string name="legal_imprint_text">
         <![CDATA[
