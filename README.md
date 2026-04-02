@@ -42,7 +42,13 @@ Der **SKS Trainer** ist eine moderne Android-Lern-App, die speziell zur Vorberei
 *   Quelle der Behördeninformationen: Wasserstraßen- und Schifffahrtsverwaltung des Bundes (WSV) / ELWIS. Die Originaldaten und offiziellen Dokumente finden Sie unter: https://www.elwis.de/DE/Sportschifffahrt/Sportbootfuehrerscheine/Fragenkatalog-SKS/Fragenkatalog-SKS-node.html
 
 ## 🎨 Screenshots
-    ![Startbild](app_screenshots/Screenshot_home_SKS Trainer.jpg)
+
+<p align="center">
+  <img src="app_screenshots/Screenshot_home_SKS-Trainer.jpg" width="250" alt="Startbild">
+  <img src="app_screenshots/Screenshot_lernen_SKS-Trainer.jpg" width="250" alt="Lernen">
+  <img src="app_screenshots/Screenshot_test_SKS-Trainer.jpg" width="250" alt="Test">
+  <img src="app_screenshots/Screenshot_stats_SKS-Trainer.jpg" width="250" alt="Statistik">
+</p>
 
 ---
 *Entwickelt mit Jetpack Compose und viel Liebe zum Segelsport.*
