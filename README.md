@@ -43,11 +43,13 @@ Der **SKS Trainer** ist eine moderne Android-Lern-App, die speziell zur Vorberei
 
 ## 🎨 Screenshots
 
-<p align="center">
-  <img src="app_screenshots/Screenshot_home_SKS-Trainer.jpg" width="250" alt="Startbild">
-  <img src="app_screenshots/Screenshot_lernen_SKS-Trainer.jpg" width="250" alt="Lernen">
-  <img src="app_screenshots/Screenshot_test_SKS-Trainer.jpg" width="250" alt="Test">
-  <img src="app_screenshots/Screenshot_stats_SKS-Trainer.jpg" width="250" alt="Statistik">
+<p> 
+<img src="app_screenshots/Screenshot_home_SKS-Trainer.jpg" width="200" alt="Startbild">
+  <img src="app_screenshots/Screenshot_lernen_SKS-Trainer.jpg" width="200" alt="Lernen">
+ <img src="app_screenshots/Screenshot_lernen1_SKS-Trainer.jpg" width="200" alt="Lernen">
+ <img src="app_screenshots/Screenshot_lernen2_SKS-Trainer.jpg" width="200" alt="Lernen">
+  <img src="app_screenshots/Screenshot_test_SKS-Trainer.jpg" width="200" alt="Test">
+  <img src="app_screenshots/Screenshot_stats_SKS-Trainer.jpg" width="200" alt="Statistik">
 </p>
 
 ---
